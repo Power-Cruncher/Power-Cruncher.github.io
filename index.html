@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NZ Electricity Retailer Comparison</title>
+  <!-- Include Chart.js library (you can download or use CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<!-- Explanation paragraph -->
+<p>This website processes a CSV file containing NZ electricity retail data, calculates the monthly totals, and displays two separate smaller graphs - one for weekends and another for weekdays.</p>
+
+<!-- Container for CSV type selection, file input, and tabs -->
+<div>
+  <!-- CSV type selection dropdown -->
+  <label for="csvTypeSelect">Select CSV Type:</label>
+  <select id="csvTypeSelect">
+    <option value="electricKiwi">Electric Kiwi</option>
+    <option value="EIEP13A">EIEP13A</option>
+    <!-- Add more options as needed -->
+  </select>
+
+  <!-- File input and process button -->
+  <input type="file" id="fileInput" accept=".csv" />
+  <button onclick="processCSV()">Process CSV</button>
+
+  <p></p>
+
+  <!-- Tabs -->
+  <div>
+    <button onclick="showUsageTab()">Usage Visualization</button>
+    <button onclick="showBillTab()">Calculated Bill by Retailer</button>
+  </div>
+
+  <!-- Content for Usage Visualization Tab -->
+  <div id="usageContent" style="display: none; border: 2px solid #ddd; padding: 10px; border-radius: 10px; margin-top: 10px;">
+    <!-- Canvas to render the chart for weekdays -->
+    <canvas id="weekdayChart" width="400" height="200" style="border: 1px solid #ddd; border-radius: 5px;"></canvas>
+
+    <!-- Canvas to render the chart for weekends -->
+    <canvas id="weekendChart" width="400" height="200" style="border: 1px solid #ddd; border-radius: 5px; margin-top: 10px;"></canvas>
+  </div>
+
+  <!-- Content for Calculated Bill by Retailer Tab -->
+  <div id="billContent" style="display: none; border: 2px solid #ddd; padding: 10px; border-radius: 10px; margin-top: 10px;">
+    <h2>Calculated Bill by Retailer</h2>
+    <table border="1" cellpadding="5">
+      <thead>
+        <tr id="billTableHeader">
+          <!-- Populated dynamically based on processed CSV -->
+        </tr>
+      </thead>
+      <tbody id="billTableBody">
+        <!-- Populated dynamically based on processed CSV -->
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+// Placeholder function to get column assignments
+function getColumnAssignments(csvType) {
+  // Define column assignments for each CSV type
+  const columnAssignments = {
+    electricKiwi: {
+      readDate: 0,
+      registryChannel: 2,
+      startValue: 5, // Assuming 0:00 is at index 5
+      endValue: 52, // Adjust the end value based on your actual CSV structure
+    },
+    EIEP13A: {
+      readDate: 0,
+      registryChannel: 2,
+      startValue: 5, // Assuming 0:00 is at index 5
+      endValue: 52, // Adjust the end value based on your actual CSV structure
+    }
+    // Add more types as needed
+  };
+
+  return columnAssignments[csvType];
+}
+
+const retailerPlanRates = {
+//enter rates here, all excluding GST for simplicity
+//  (most retailers disclose prices this way)
+  // 'daily': {        // added as a retailer to sanity check daily charges
+  //   'daily': 100,
+  //   'variable': 0,
+  // },
+  // 'variable': {     // added as a retailer to sanity check variable charges
+  //   'daily': 0,
+  //   'variable': 100,
+  // },
+  'Frank Energy': {
+    'daily': 135,     //  c/day (excl GST)
+    'variable': 22.4, //  c/kwh (excl GST)
+  },
+  'Genesis - Energy Basic': {
+    'daily': 203,
+    'variable': 22
+  },
+  'Genesis: Energy Plus': {
+    'daily': 231,
+    'variable': 25
+  },
+  'Mercury: 1year fixed': {
+    'daily': 204.32,
+    'variable': 18.65
+  },
+  'Pulse Energy: ': {
+    'daily': 247,
+    'variable': 19.543
+  },
+  'Trustpower': {
+    'daily': 179,
+    'variable': 20.42
+  },
+  'Electric Kiwi: Loyal Kiwi': {
+    'daily': 215,
+    'variable': 26.65
+  }
+  // Add more retailers as needed and extend to 
+};
+
+function calculateBillData(monthlyData) {
+  const retailers = Object.keys(retailerPlanRates);
+  const months = Array.from(monthlyData.keys());
+  const billData = [];
+
+  console.log(monthlyData)
+
+  retailers.forEach((retailer) => {
+    const retailerRow = { retailer };
+    months.forEach((month) => {
+      
+      const dailyRate = retailerPlanRates[retailer]['daily']
+      const variableRate = retailerPlanRates[retailer]['variable']
+      // Filter rows for the current month and count the number of rows
+      const daysInMonth = 28
+      
+      // Use reduce to sum the values in the array
+      const totalValue = Object.values(monthlyData.get(month))
+        .flatMap(array => array)  
+        .reduce((total, value) => total + value, 0);
+
+      //console.log(daysInMonth, dailyRate, totalValue, variableRate)
+      
+      const totalBill = ((daysInMonth * dailyRate) + (totalValue * variableRate))/100;
+      retailerRow[month] = totalBill.toFixed(2);
+    });
+
+    billData.push(retailerRow);
+  });
+
+  console.log(billData)
+  return billData;
+}
+
+function renderBillTable(billData) {
+  console.log(billData)
+  const tableHeader = document.getElementById('billTableHeader');
+  const tableBody = document.getElementById('billTableBody');
+
+  // Clear existing table content
+  tableHeader.innerHTML = '';
+  tableBody.innerHTML = '';
+
+  // Sort months based on the first row of data (assuming the first row contains all months)
+  const sortedMonths = Object.keys(billData[0]).filter(key => key !== 'retailer');
+
+  // Populate table header
+  const headerRow = document.createElement('tr');
+  headerRow.innerHTML = '<th>Retailer</th>' + sortedMonths.map(month => `<th>${month}</th>`).join('');
+  tableBody.appendChild(headerRow);
+
+  // Populate table body
+  billData.forEach((row) => {
+    const tableRow = document.createElement('tr');
+    Object.keys(row).forEach((key) => {
+      const cell = document.createElement('td');
+      cell.textContent = row[key];
+      tableRow.appendChild(cell);
+    });
+    tableBody.appendChild(tableRow);
+  });
+}
+
+// Modify the existing processCSV function to call calculateBillData and renderBillTable
+function processCSV() {
+  const fileInput = document.getElementById('fileInput');
+  const csvTypeSelect = document.getElementById('csvTypeSelect');
+  const selectedCsvType = csvTypeSelect.value;
+
+  // Check if a file is selected
+  if (fileInput.files.length === 0) {
+    alert('Please select a CSV file.');
+    return;
+  }
+
+  const file = fileInput.files[0];
+  const reader = new FileReader();
+
+  reader.onload = function (e) {
+    const csvContent = e.target.result;
+    const rows = csvContent.split('\n');
+
+    // Create a map to store accumulated values for each month and each category (weekday/weekend)
+    const monthlyData = new Map();
+
+    // Define column assignments based on CSV type
+    const columnAssignments = getColumnAssignments(selectedCsvType);
+
+    // Process CSV data
+    for (let i = 1; i < rows.length; i++) {
+      const columns = rows[i].split(',');
+
+      // Check if "Registry_Channel_Number" is 1
+      if (columns[columnAssignments.registryChannel] === '1') {
+        // Extract month and day of the week from the "Read_Date" column (assuming "Read_Date" is in DD/MM/YYYY format)
+        const dateParts = columns[columnAssignments.readDate].split('/');
+        const monthAbbreviation = new Date(`${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`).toLocaleDateString('en-US', { month: 'short' });
+        const dayOfWeek = new Date(`${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`).getDay(); // 0 (Sunday) to 6 (Saturday)
+        const category = dayOfWeek >= 1 && dayOfWeek <= 5 ? 'Weekday' : 'Weekend';
+
+        // Initialize the array for the month and category if it doesn't exist
+        if (!monthlyData.has(monthAbbreviation)) {
+          monthlyData.set(monthAbbreviation, {
+            'Weekday': new Array(48).fill(0),
+            'Weekend': new Array(48).fill(0),
+          });
+        }
+
+        // Accumulate values for each column and category
+        for (let j = columnAssignments.startValue; j <= columnAssignments.endValue; j++) {
+          const value = parseFloat(columns[j]);
+          if (!isNaN(value)) {
+            monthlyData.get(monthAbbreviation)[category][j - columnAssignments.startValue] += value;
+          }
+        }
+      }
+    }
+
+    // Display the result as graphs
+    renderCharts(monthlyData);
+
+    // Calculate bill data and render the bill table
+    const billData = calculateBillData(monthlyData);
+    renderBillTable(billData);
+
+    //show charts by default
+    showUsageTab()
+  };
+
+  reader.readAsText(file);
+}
+
+function renderCharts(monthlyData) {
+  // Separate data for weekdays and weekends
+  const weekdays = Array.from(monthlyData.keys()).map(month => ({
+    month,
+    category: 'Weekday',
+    average: monthlyData.get(month).Weekday.map(value => value / monthlyData.size),
+  }));
+
+  const weekends = Array.from(monthlyData.keys()).map(month => ({
+    month,
+    category: 'Weekend',
+    average: monthlyData.get(month).Weekend.map(value => value / monthlyData.size),
+  }));
+
+  renderChart('weekdayChart', weekdays, 'Weekday Chart');
+  renderChart('weekendChart', weekends, 'Weekend Chart');
+}
+
+function renderChart(canvasId, data, chartTitle) {
+  const labels = Array.from({ length: 48 }, (_, i) => `Hour ${i}`);
+  const datasets = data.map(dataItem => ({
+    label: `${dataItem.month} - ${dataItem.category}`,
+    data: dataItem.average,
+    borderColor: getRandomColor(),
+    fill: false,
+  }));
+
+  const ctx = document.getElementById(canvasId).getContext('2d');
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: datasets,
+    },
+    options: {
+      scales: {
+        x: {
+          title: {
+            display: true,
+            text: 'Hour',
+          },
+        },
+        y: {
+          title: {
+            display: true,
+            text: 'Average Value',
+          },
+        },
+      },
+      plugins: {
+        title: {
+          display: true,
+          text: chartTitle,
+        },
+      },
+    },
+  });
+}
+
+// Placeholder function to get random color
+function getRandomColor() {
+  const letters = '0123456789ABCDEF';
+  let color = '#';
+  for (let i = 0; i < 6; i++) {
+    color += letters[Math.floor(Math.random() * 16)];
+  }
+  return color;
+}
+
+// Placeholder function to get month from Read Date
+function getMonthFromReadDate(readDate) {
+  const date = new Date(readDate);
+  return date.toLocaleString('en-US', { month: 'short' });
+}
+
+// Functions to show/hide tabs
+function showUsageTab() {
+  document.getElementById('usageContent').style.display = 'block';
+  document.getElementById('billContent').style.display = 'none';
+}
+
+function showBillTab() {
+  document.getElementById('usageContent').style.display = 'none';
+  document.getElementById('billContent').style.display = 'block';
+}
+</script>
+
+</body>
+</html>
