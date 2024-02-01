@@ -6,27 +6,42 @@
   <title>NZ Electricity Retailer Comparison</title>
   <!-- Include Chart.js library (you can download or use CDN) -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
 </head>
 <body>
+
+<!-- https://www.ecosmart.co.nz/images/investment/How_to_be_a_retailer_guidelines_V911.pdf -->
+
 
 <!-- Explanation paragraph -->
 <p>This website processes a CSV file containing NZ electricity retail data, calculates the monthly totals, and displays two separate smaller graphs - one for weekends and another for weekdays.</p>
 
 <!-- Container for CSV type selection, file input, and tabs -->
 <div>
-  <!-- CSV type selection dropdown -->
-  <label for="csvTypeSelect">Select CSV Type:</label>
-  <select id="csvTypeSelect">
-    <option value="electricKiwi">Electric Kiwi</option>
-    <option value="EIEP13A">EIEP13A</option>
-    <!-- Add more options as needed -->
-  </select>
-
-  <!-- File input and process button -->
-  <input type="file" id="fileInput" accept=".csv" />
-  <button onclick="processCSV()">Process CSV</button>
-
+  <ol>
+    <!--//https://www.ea.govt.nz/industry/consumer-data/ -->
+    <li>Request exactly 1 years of data from your current power company/retailer.<a href="https://www.ea.govt.nz/industry/retail/eieps/">(EIEP13A)</a> </li>
+    <li>
+      <!-- CSV type selection dropdown -->
+      <label for="csvTypeSelect">Select CSV Type:</label>
+      <select id="csvTypeSelect">
+        <!-- <option value="EIEP13A">EIEP13A (v1.4)</option> -->
+        <option value="ElectricKiwi">Electric Kiwi</option>
+        <!-- Add more options as needed -->
+      </select>
+    </li>
+    <li>
+      Upload CSV from step 1 <input type="file" id="fileInput" accept=".csv" />
+      <!-- File input and process button -->
+      <button onclick="processCSV()">Load CSV</button>
+    </li>
+    <li>
+      Load or build power plans you want to compare
+    </li>
+  </ol>
   <p></p>
+  <!-- <input type="checkbox" id="registryChannelIndexCheckbox" name="registryChannelIndexCheckbox">
+  <label for="registryChannelIndexCheckbox">Registry Channel Index</label> -->
 
   <!-- Tabs -->
   <div>
@@ -65,6 +80,8 @@ function getColumnAssignments(csvType) {
   // Define column assignments for each CSV type
   const columnAssignments = {
     electricKiwi: {
+      // "Read_Date,,Registry_Channel_Number,Start Value,End Value,0:00,0:30,1:00,1:30,2:00,2:30,3:00,3:30,4:00,4:30,5:00,5:30,6:00,6:30,7:00,7:30,8:00,8:30,9:00,9:30,10:00,10:30,11:00,11:30,12:00,12:30,13:00,13:30,14:00,14:30,15:00,15:30,16:00,16:30,17:00,17:30,18:00,18:30,19:00,19:30,20:00,20:30,21:00,21:30,22:00,22:30,23:00,23:30"
+      // "\"Read Date\",\"Component Serial Number","Registry Channel Number","Interval Start Read","Interval End Read","Interval 1","Interval 2","Interval 3","Interval 4","Interval 5","Interval 6","Interval 7","Interval 8","Interval 9","Interval 10","Interval 11","Interval 12","Interval 13","Interval 14","Interval 15","Interval 16","Interval 17","Interval 18","Interval 19","Interval 20","Interval 21","Interval 22","Interval 23","Interval 24","Interval 25","Interval 26","Interval 27","Interval 28","Interval 29","Interval 30","Interval 31","Interval 32","Interval 33","Interval 34","Interval 35","Interval 36","Interval 37","Interval 38","Interval 39","Interval 40","Interval 41","Interval 42","Interval 43","Interval 44","Interval 45","Interval 46","Interval 47","Interval 48","Interval 49","Interval 50","Register Read/Register Start Read","Register Read/Register End Read","Validation Flag","Energy Flow Direction"
       readDate: 0,
       registryChannel: 2,
       startValue: 5, // Assuming 0:00 is at index 5
@@ -93,6 +110,7 @@ const retailerPlanRates = {
   //   'daily': 0,
   //   'variable': 100,
   // },
+  //https://www.powershop.co.nz/our-rates/
   'Frank Energy': {
     'daily': 135,     //  c/day (excl GST)
     'variable': 22.4, //  c/kwh (excl GST)
@@ -137,9 +155,8 @@ function calculateBillData(monthlyData) {
       
       const dailyRate = retailerPlanRates[retailer]['daily']
       const variableRate = retailerPlanRates[retailer]['variable']
-      // Filter rows for the current month and count the number of rows
-      const daysInMonth = 28
-      
+
+      const daysInMonth = 28  //need to fix monthlyData to get appropriate level of detail for the bill checker
       // Use reduce to sum the values in the array
       const totalValue = Object.values(monthlyData.get(month))
         .flatMap(array => array)  
@@ -187,7 +204,41 @@ function renderBillTable(billData) {
   });
 }
 
-// Modify the existing processCSV function to call calculateBillData and renderBillTable
+function parseCSV(csvString, delimiter = ',') {
+    // Split the CSV string into an array of rows
+    const rows = csvString.trim().split(/\r?\n/);
+
+    // Initialize an array to hold the parsed data
+    const data = [];
+
+    // Iterate through each row
+    rows.forEach(row => {
+        let values = [];
+        let quotedField = false;
+        let currentValue = '';
+
+        // Process each character in the row
+        for (let i = 0; i < row.length; i++) {
+            const char = row[i];
+
+            if (char === '"') {
+                quotedField = !quotedField;
+            } else if (char === delimiter && !quotedField) {
+                // If delimiter is found and not within a quoted field, push the current value to the values array
+                values.push(currentValue.trim());
+                currentValue = '';
+            } else {
+                currentValue += char;
+            }
+        }
+        // Push the last value to the values array
+        values.push(currentValue.trim());
+        data.push(values);
+    });
+
+    return data;
+}
+
 function processCSV() {
   const fileInput = document.getElementById('fileInput');
   const csvTypeSelect = document.getElementById('csvTypeSelect');
@@ -204,45 +255,73 @@ function processCSV() {
 
   reader.onload = function (e) {
     const csvContent = e.target.result;
-    const rows = csvContent.split('\n');
+    const data = parseCSV(csvContent, ',')
+    console.log(data)
 
-    // Create a map to store accumulated values for each month and each category (weekday/weekend)
-    const monthlyData = new Map();
+    // Create a map to store data as date: list of 48 value pairs
+    const dailyData = new Map();
 
-    // Define column assignments based on CSV type
-    const columnAssignments = getColumnAssignments(selectedCsvType);
-
-    // Process CSV data
-    for (let i = 1; i < rows.length; i++) {
-      const columns = rows[i].split(',');
-
-      // Check if "Registry_Channel_Number" is 1
-      if (columns[columnAssignments.registryChannel] === '1') {
-        // Extract month and day of the week from the "Read_Date" column (assuming "Read_Date" is in DD/MM/YYYY format)
-        const dateParts = columns[columnAssignments.readDate].split('/');
-        const monthAbbreviation = new Date(`${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`).toLocaleDateString('en-US', { month: 'short' });
-        const dayOfWeek = new Date(`${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`).getDay(); // 0 (Sunday) to 6 (Saturday)
-        const category = dayOfWeek >= 1 && dayOfWeek <= 5 ? 'Weekday' : 'Weekend';
-
-        // Initialize the array for the month and category if it doesn't exist
-        if (!monthlyData.has(monthAbbreviation)) {
-          monthlyData.set(monthAbbreviation, {
-            'Weekday': new Array(48).fill(0),
-            'Weekend': new Array(48).fill(0),
-          });
+    switch (selectedCsvType) {
+      case'ElectricKiwi':
+        console.log('processing "ElectricKiwi" format');
+        // find columns and stop processing if not found
+        let Read_Date
+        if (data[0].includes('Read Date')) {
+          Read_Date = data[0].indexOf('Read Date');
+        } else if (data[0].includes('Read_Date')) {
+          Read_Date = data[0].indexOf('Read_Date');
+        } else {
+          alert('"Read Date"/"Read_Date" column not found');
+          return;
         }
-
-        // Accumulate values for each column and category
-        for (let j = columnAssignments.startValue; j <= columnAssignments.endValue; j++) {
-          const value = parseFloat(columns[j]);
-          if (!isNaN(value)) {
-            monthlyData.get(monthAbbreviation)[category][j - columnAssignments.startValue] += value;
+        let startValue
+        if (data[0].includes('Interval 1')) {
+          startValue = data[0].indexOf('Interval 1');
+        } else if (data[0].includes('0:00')) {
+          startValue = data[0].indexOf('0:00');
+        } else {
+          alert('"Interval 1"/"0:00" column not found');
+          return;
+        }
+        let endValue
+        if (data[0].includes('Interval 48')) {
+          endValue = data[0].indexOf('Interval 48');
+        } else if (data[0].includes('23:30')) {
+          endValue = data[0].indexOf('23:30');
+        } else {
+          alert('"Interval 48"/"23:30" column not found');
+          return;
+        }
+        console.log('column assignments made')
+        console.log(data.length)
+        // Process CSV data (1st row is header data)
+        for (let i = 1; i < data.length; i++) {
+          const column = data[i];
+          let date = detectAndParseDate(column[Read_Date]);
+          // Initialize the array for the date if it doesn't exist
+          if (!dailyData.has(date)) {
+            dailyData.set(date, new Array(48).fill(0));
+          }
+          // Accumulate values for each column
+          for (let j = startValue; j <= endValue; j++) {
+            const value = parseFloat(column[j]);
+            if (!isNaN(value)) {
+              dailyData.get(date)[j - startValue] += value;
+            }
           }
         }
-      }
+        break;
+      case 'EIEP13A':
+        console.log('processing "EIEP13A" format');
+        alert('EIEP13A format not implemented');
+        return;
+        break;
     }
 
+    console.log(dailyData)
     // Display the result as graphs
+    const monthlyData = formatDataForCharts(dailyData);
+    console.log(monthlyData)
     renderCharts(monthlyData);
 
     // Calculate bill data and render the bill table
@@ -254,6 +333,51 @@ function processCSV() {
   };
 
   reader.readAsText(file);
+}
+
+function detectAndParseDate(dateString) {
+  // Add more date format detection and parsing logic as needed
+  const dateFormats = [
+    { format: 'D/MM/YYYY', regex: /^\d{1,2}\/\d{2}\/\d{4}$/ },
+    { format: 'YYYY-MM-DD', regex: /^\d{4}-\d{2}-\d{2}$/ },
+    // Add more formats if required
+  ];
+
+  for (const { format, regex } of dateFormats) {
+    if (regex.test(dateString)) {
+      return moment(dateString, format).format('YYYY-MM-DD');
+    }
+  }
+
+  // Default to returning the original string if no match is found
+  return dateString;
+}
+
+
+function formatDataForCharts(dailyData) {
+  const monthlyData = new Map();
+
+  dailyData.forEach((values, date) => {
+    // Extract month from the date in the format yyyy-mm-dd
+    const [year, month] = date.split('-').slice(0, 2);
+
+    // Initialize the object for the month if it doesn't exist
+    if (!monthlyData.has(month)) {
+      monthlyData.set(month, {
+        Weekday: new Array(48).fill(0),
+        Weekend: new Array(48).fill(0)
+      });
+    }
+
+    // Accumulate values for each column based on day of the week
+    const dayOfWeek = new Date(date).getDay();
+    const category = dayOfWeek >= 1 && dayOfWeek <= 5 ? 'Weekday' : 'Weekend';
+    for (let i = 0; i < values.length; i++) {
+      monthlyData.get(month)[category][i] += values[i];
+    }
+  });
+
+  return monthlyData;
 }
 
 function renderCharts(monthlyData) {
@@ -275,17 +399,25 @@ function renderCharts(monthlyData) {
 }
 
 function renderChart(canvasId, data, chartTitle) {
-  const labels = Array.from({ length: 48 }, (_, i) => `Hour ${i}`);
-  const datasets = data.map(dataItem => ({
+  const labels = Array.from({ length: 48 }, (_, i) => `${i / 2}`);
+  const datasets = data.map((dataItem) => ({
     label: `${dataItem.month} - ${dataItem.category}`,
     data: dataItem.average,
     borderColor: getRandomColor(),
     fill: false,
   }));
 
-  const ctx = document.getElementById(canvasId).getContext('2d');
+  const canvasElement = document.getElementById(canvasId);
+  const existingChart = Chart.getChart(canvasElement);
+
+  // Destroy existing chart if it exists
+  if (existingChart) {
+    existingChart.destroy();
+  }
+
+  const ctx = canvasElement.getContext("2d");
   new Chart(ctx, {
-    type: 'line',
+    type: "line",
     data: {
       labels: labels,
       datasets: datasets,
@@ -295,13 +427,13 @@ function renderChart(canvasId, data, chartTitle) {
         x: {
           title: {
             display: true,
-            text: 'Hour',
+            text: "Hour",
           },
         },
         y: {
           title: {
             display: true,
-            text: 'Average Value',
+            text: "Average Value",
           },
         },
       },
@@ -330,6 +462,7 @@ function getMonthFromReadDate(readDate) {
   const date = new Date(readDate);
   return date.toLocaleString('en-US', { month: 'short' });
 }
+const x = 1;
 
 // Functions to show/hide tabs
 function showUsageTab() {
