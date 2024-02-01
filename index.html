@@ -20,7 +20,12 @@
 <div>
   <ol>
     <!--//https://www.ea.govt.nz/industry/consumer-data/ -->
-    <li>Request exactly 1 years of data from your current power company/retailer.<a href="https://www.ea.govt.nz/industry/retail/eieps/">(EIEP13A)</a> </li>
+    <li>
+      Request exactly 1 years of data from your current power company/retailer.<a href="https://www.ea.govt.nz/industry/retail/eieps/">(EIEP13A)</a> </li>
+    </li>
+    <li>
+    Upload CSV from step 1 <input type="file" id="fileInput" accept=".csv" />
+    <!-- File input and process button -->
     <li>
       <!-- CSV type selection dropdown -->
       <label for="csvTypeSelect">Select CSV Type:</label>
@@ -28,12 +33,7 @@
         <option value="EIEP13A">EIEP13A</option>
         <option value="ElectricKiwi">Electric Kiwi</option>
         <!-- Add more options as needed -->
-      </select>
-    </li>
-    <li>
-      Upload CSV from step 1 <input type="file" id="fileInput" accept=".csv" />
-      <!-- File input and process button -->
-      <button onclick="processCSV()">Load CSV</button>
+      </select><button onclick="processCSV()">Load CSV</button>
     </li>
     <li>
       Load or build power plans you want to compare
