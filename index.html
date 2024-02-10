@@ -7,13 +7,38 @@
   <!-- Include Chart.js library (you can download or use CDN) -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+  <style>
+    /* CSS styling for the modal overlay */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+    }
+    .modal-content {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 5px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    }
+    .step {
+        display: none;
+    }
+    .step.active {
+        display: block;
+    }
+  </style>
 </head>
+
 <body>
-
-<!-- https://www.ecosmart.co.nz/images/investment/How_to_be_a_retailer_guidelines_V911.pdf -->
-
-
-<!-- Explanation paragraph -->
 <p>This website processes a CSV file containing NZ electricity retail data, calculates the monthly totals, and displays two separate smaller graphs - one for weekends and another for weekdays.</p>
 
 <!-- Container for CSV type selection, file input, and tabs -->
@@ -21,7 +46,7 @@
   <ol>
     <!--//https://www.ea.govt.nz/industry/consumer-data/ -->
     <li>
-      Request exactly 1 years of data from your current power company/retailer.<a href="https://www.ea.govt.nz/industry/retail/eieps/">(EIEP13A)</a> </li>
+      Request at least a year's data from your current power company/retailer.<a href="https://www.ea.govt.nz/industry/retail/eieps/">(EIEP13A)</a> </li>
     </li>
     <li>
     Upload CSV from step 1 <input type="file" id="fileInput" accept=".csv" />
@@ -33,10 +58,132 @@
         <option value="EIEP13A">EIEP13A</option>
         <option value="ElectricKiwi">Electric Kiwi</option>
         <!-- Add more options as needed -->
-      </select><button onclick="processCSV()">Load CSV</button>
+      </select>
+      <button onclick="processCSV()">Load CSV</button>
     </li>
     <li>
       Load or build power plans you want to compare
+      <button onclick="openWizard()">Open Wizard</button>
+      
+      <div class="modal-overlay" id="wizardModal">
+          <div class="modal-content">
+              <div class="wizard">
+                  <div class="step" id="step1">
+                    <b>New Power Plan Wizard</b><br><br>
+                    <table border="1">
+                      <tbody>
+                        <tr><td>Retailer</td> <td colspan="3"><input type="text" id="Retailer"></td></tr>
+                        <tr><td>Plan</td>     <td colspan="3"><input type="text" id="PlanName"></td></tr>
+                        <tr><td>Region</td>   <td colspan="3"><input type="text" id="Region"></td></tr>
+                        <tr><td>Date</td>     <td colspan="3"><input type="date" id="UpdateDate"></td></tr>
+                        <tr><td>Source</td>   <td colspan="3"><input type="text" id="SourceURL"></td></tr>
+                        <tr>
+                          <td style="width: 80px;"><button onclick="finish()">Cancel</button></td>
+                          <td style="width: 80px;">&nbsp;</td>
+                          <td style="width: 80px;">&nbsp;</td>
+                          <td><button onclick="nextStep()">Next</button></td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div class="step" id="step2">
+                    <b>New Power Plan Wizard</b><br><br>
+                    <table border="1">
+                      <tbody>
+                        <tr><td colspan="4">
+                          <input type="radio" id="plan1" name="plan" value="All_Inclusive" /> 
+                          <label for="plan1">All-Inclusive</label><br />
+                          <input type="radio" id="plan2" name="plan" value="Controlled" /> 
+                          <label for="plan2">Controlled/Uncontrolled</label>
+                        </td></tr>
+                        <tr><td>&nbsp;</td></tr>
+                        <tr><td colspan="4">
+                          <input type="checkbox" id="weekend" name="options[]" value="weekend">
+                          <label for="weekend">Build separate weekend rates</label><br>
+                          <input type="checkbox" id="EK_HOP" name="options[]" value="EK_HOP">
+                          <label for="EK_HOP">[Electric Kiwi] Calc Hr of Power</label><br>
+                        </td></tr>
+                        <tr><td>&nbsp;</td></tr>
+                        <tr>
+                          <td style="width: 80px;"><button onclick="finish()">Cancel</button></td>
+                          <td style="width: 80px;">&nbsp;</td>
+                          <td style="width: 80px; text-align: right;">
+                            <button onclick="prevStep()">Previous</button></td>
+                          <td><button onclick="nextStep()">Next</button></td>
+                          </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div class="step" id="step3">
+                    <b>New Power Plan Wizard</b><br><br>
+                    <table border="1">
+                      <tbody>
+                        <tr>
+                          <td>
+                          <table border="1">
+                            <tbody>
+                              <tr>
+                                <td style="width: 50%;">
+                                <table border="1">
+                                <tbody>
+                                <tr>
+                                  <td style="width: 33.3333%;">Desc</td>
+                                  <td style="width: 33.3333%;">Rate</td>
+                                  <td style="width: 33.3333%;">Hours</td>
+                                </tr>
+                                <tr>
+                                  <td style="width: 33.3333%;">Daily Charge</td>
+                                  <td style="width: 33.3333%;">0.1</td>
+                                  <td style="width: 33.3333%;">n/a</td>
+                                </tr>
+                                <tr>
+                                  <td style="width: 33.3333%;">Offpeak</td>
+                                  <td style="width: 33.3333%;">0.2</td>
+                                  <td style="width: 33.3333%;">0-5,11-13</td>
+                                </tr>
+                                <tr>
+                                  <td style="width: 33.3333%;">Shoulder</td>
+                                  <td style="width: 33.3333%;">0.3</td>
+                                  <td style="width: 33.3333%;">&nbsp;</td>
+                                </tr>
+                                <tr>
+                                  <td style="width: 33.3333%;">Peak</td>
+                                  <td style="width: 33.3333%;">0.4</td>
+                                  <td style="width: 33.3333%;">&nbsp;</td>
+                                </tr>
+                                </tbody>
+                                </table>
+                                </td>
+                                <td>
+                                  <canvas id="24hrRate" width="400" height="200" style="border: 1px solid #ddd; border-radius: 5px;"></canvas>
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                          </td>
+                        </tr>
+                        <tr>
+                        <td style="width: 100%;">
+                        <table border="1">
+                        <tbody>
+                        <tr>
+                        <td style="width: 80px;"><button onclick="finish()">Cancel</button></td>
+                        <td style="width: 80px;"><button onclick="refreshChart()">Refresh</button></td>
+                        <td style="width: 80px; text-align: right;">
+                          <button onclick="prevStep()">Previous</button></td>
+                        <td><button onclick="finish()">Finish</button></td>
+                        </tr>
+                        </tbody>
+                        </table>
+                        </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+              </div>
+          </div>
+      </div>
+
     </li>
   </ol>
   <p></p>
@@ -75,29 +222,50 @@
 </div>
 
 <script>
-// Placeholder function to get column assignments
-function getColumnAssignments(csvType) {
-  // Define column assignments for each CSV type
-  const columnAssignments = {
-    electricKiwi: {
-      // "Read_Date,,Registry_Channel_Number,Start Value,End Value,0:00,0:30,1:00,1:30,2:00,2:30,3:00,3:30,4:00,4:30,5:00,5:30,6:00,6:30,7:00,7:30,8:00,8:30,9:00,9:30,10:00,10:30,11:00,11:30,12:00,12:30,13:00,13:30,14:00,14:30,15:00,15:30,16:00,16:30,17:00,17:30,18:00,18:30,19:00,19:30,20:00,20:30,21:00,21:30,22:00,22:30,23:00,23:30"
-      // "\"Read Date\",\"Component Serial Number","Registry Channel Number","Interval Start Read","Interval End Read","Interval 1","Interval 2","Interval 3","Interval 4","Interval 5","Interval 6","Interval 7","Interval 8","Interval 9","Interval 10","Interval 11","Interval 12","Interval 13","Interval 14","Interval 15","Interval 16","Interval 17","Interval 18","Interval 19","Interval 20","Interval 21","Interval 22","Interval 23","Interval 24","Interval 25","Interval 26","Interval 27","Interval 28","Interval 29","Interval 30","Interval 31","Interval 32","Interval 33","Interval 34","Interval 35","Interval 36","Interval 37","Interval 38","Interval 39","Interval 40","Interval 41","Interval 42","Interval 43","Interval 44","Interval 45","Interval 46","Interval 47","Interval 48","Interval 49","Interval 50","Register Read/Register Start Read","Register Read/Register End Read","Validation Flag","Energy Flow Direction"
-      readDate: 0,
-      registryChannel: 2,
-      startValue: 5, // Assuming 0:00 is at index 5
-      endValue: 52, // Adjust the end value based on your actual CSV structure
-    },
-    EIEP13A: {
-      readDate: 0,
-      registryChannel: 2,
-      startValue: 5, // Assuming 0:00 is at index 5
-      endValue: 52, // Adjust the end value based on your actual CSV structure
+  let currentStep = 3;
+  let dailyRate = [
+    {
+      'average':[20,20,20,20,20,20,20,20,30,30,30,30,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20],
+      'category': 'Weekday',
+      'month': 'All'
     }
-    // Add more types as needed
-  };
+    ]
+  console.log(dailyRate)
+  function openWizard() {
+      document.getElementById('wizardModal').style.display = 'block';
+      showStep(currentStep);
+  }
 
-  return columnAssignments[csvType];
-}
+  function closeWizard() {
+      document.getElementById('wizardModal').style.display = 'none';
+  }
+
+  function nextStep() {
+        currentStep++;
+        showStep(currentStep);
+    }
+
+    function prevStep() {
+        currentStep--;
+        showStep(currentStep);
+    }
+
+  function finish() {
+      currentStep = 1;
+      closeWizard();
+  }
+  function refreshChart() {
+    var chartTitle = document.getElementById("Retailer").value
+    dailyRate[0].category = document.getElementById("Retailer").value
+    dailyRate[0].month = document.getElementById("Retailer").value
+    renderChart('24hrRate', dailyRate, chartTitle, 'c/kWh')
+  }
+
+  function showStep(stepIndex) {
+        const steps = document.querySelectorAll('.step');
+        steps.forEach(step => step.classList.remove('active'));
+        steps[stepIndex - 1].classList.add('active');
+    }
 
 const retailerPlanRates = {
 //enter rates here, all excluding GST for simplicity
@@ -147,7 +315,7 @@ function calculateBillData(monthlyData) {
   const months = Array.from(monthlyData.keys());
   const billData = [];
 
-  console.log(monthlyData)
+  // console.log(monthlyData)
 
   retailers.forEach((retailer) => {
     const retailerRow = { retailer };
@@ -171,12 +339,12 @@ function calculateBillData(monthlyData) {
     billData.push(retailerRow);
   });
 
-  console.log(billData)
+  // console.log(billData)
   return billData;
 }
 
 function renderBillTable(billData) {
-  console.log(billData)
+  // console.log(billData)
   const tableHeader = document.getElementById('billTableHeader');
   const tableBody = document.getElementById('billTableBody');
 
@@ -292,8 +460,8 @@ function processCSV() {
           alert('"Interval 48"/"23:30" column not found');
           return;
         }
-        console.log('column assignments made')
-        console.log(data.length)
+        // console.log('column assignments made')
+        // console.log(data.length)
         // Process CSV data (1st row is header data)
         for (let i = 1; i < data.length; i++) {
           const column = data[i];
@@ -318,10 +486,10 @@ function processCSV() {
         break;
     }
 
-    console.log(dailyData)
+    // console.log(dailyData)
     // Display the result as graphs
     const monthlyData = formatDataForCharts(dailyData);
-    console.log(monthlyData)
+    // console.log(monthlyData)
     renderCharts(monthlyData);
 
     // Calculate bill data and render the bill table
@@ -393,12 +561,13 @@ function renderCharts(monthlyData) {
     category: 'Weekend',
     average: monthlyData.get(month).Weekend.map(value => value / monthlyData.size),
   }));
-
-  renderChart('weekdayChart', weekdays, 'Weekday Chart');
-  renderChart('weekendChart', weekends, 'Weekend Chart');
+  console.log("renderCharts()")
+  console.log(weekdays)
+  renderChart('weekdayChart', weekdays, 'Weekday Chart', "Average Value");
+  renderChart('weekendChart', weekends, 'Weekend Chart', "Average Value");
 }
 
-function renderChart(canvasId, data, chartTitle) {
+function renderChart(canvasId, data, chartTitle, yAxisLabel) {
   const labels = Array.from({ length: 48 }, (_, i) => `${i / 2}`);
   const datasets = data.map((dataItem) => ({
     label: `${dataItem.month} - ${dataItem.category}`,
@@ -433,7 +602,7 @@ function renderChart(canvasId, data, chartTitle) {
         y: {
           title: {
             display: true,
-            text: "Average Value",
+            text: yAxisLabel,
           },
         },
       },
@@ -462,7 +631,6 @@ function getMonthFromReadDate(readDate) {
   const date = new Date(readDate);
   return date.toLocaleString('en-US', { month: 'short' });
 }
-const x = 1;
 
 // Functions to show/hide tabs
 function showUsageTab() {
