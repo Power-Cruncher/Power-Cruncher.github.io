@@ -86,34 +86,37 @@
                       </tbody>
                     </table>
                   </div>
-                  <!-- <div class="step" id="step2">
+                  <div class="step" id="step2">
                     <b>New Power Plan Wizard</b><br><br>
                     <table border="1">
                       <tbody>
                         <tr><td colspan="4">
-                          <input type="radio" id="plan1" name="plan" value="All_Inclusive" /> 
-                          <label for="plan1">All-Inclusive</label><br />
-                          <input type="radio" id="plan2" name="plan" value="Controlled" /> 
-                          <label for="plan2">Controlled/Uncontrolled</label>
+                          <input type="radio" id="AllInclusive" name="plan" value="All-Inclusive" /> 
+                          <label for="AllInclusive">All-Inclusive</label><br />
+                          <input type="radio" id="Controlled" name="plan" value="Controlled" /> 
+                          <label for="Controlled">Controlled/Uncontrolled</label>
                         </td></tr>
                         <tr><td>&nbsp;</td></tr>
                         <tr><td colspan="4">
-                          <input type="checkbox" id="weekend" name="options[]" value="weekend">
+                          <input type="checkbox" id="weekend" name="weekend">
                           <label for="weekend">Build separate weekend rates</label><br>
-                          <input type="checkbox" id="EK_HOP" name="options[]" value="EK_HOP">
-                          <label for="EK_HOP">[Electric Kiwi] Calc Hr of Power</label><br>
+                          
+                          <input type="checkbox" id="buyback" name="buyback">
+                          <label for="buyback">Build export/solar buyback rates</label><br>
+                          
+                          <input type="checkbox" id="EK_HOP" name="EK_HOP">
+                          <label for="EK_HOP">Calculate "Hour of Power" [Electric Kiwi]</label><br>
                         </td></tr>
-                        <tr><td>&nbsp;</td></tr>
                         <tr>
-                          <td style="width: 80px;"><button onclick="finish()">Cancel</button></td>
+                          <td style="width: 80px;"><button onclick="closeWizard()">Cancel</button></td>
                           <td style="width: 80px;">&nbsp;</td>
                           <td style="width: 80px; text-align: right;">
-                            <button onclick="prevStep()">Previous</button></td>
-                          <td><button onclick="nextStep()">Next</button></td>
+                            <button onclick="showStep(1)">Previous</button></td>
+                          <td><button id="openStep3" disabled onclick="openStep3()">Next</button></td>
                           </tr>
                       </tbody>
                     </table>
-                  </div> -->
+                  </div>
                   <div class="step" id="step2">
                     <b>New Power Plan Wizard - Add Rates</b><br><br>
                     <table border="1">
@@ -127,65 +130,18 @@
                                 <table border="1">
                                 <tbody>
                                 <tr>
-                                  <td></td>
-                                  <td>
-                                    <select id="RateType">
-                                      <option value="">Select Rate Type</option>
-                                      <option value="All-Inclusive">All-Inclusive</option>
-                                      <option value="Controlled">Controlled</option>
-                                      <option value="Uncontrolled">Uncontrolled</option>
-                                    </select>
-                                  </td>
-                                  <td>
-                                    <select id="RateValidity">
-                                      <option value="">Rate Valid for</option>
-                                      <option value="Both">Weekdays and Weekends</option>
-                                      <option value="Weekday">Weekdays</option>
-                                      <option value="Weekend">Weekends</option>
-                                    </select>
-                                  </td>
-                                </tr>
-                                <tr>
-                                  <td>Desc</td>
-                                  <td>Rate (c/kWh)</td>
-                                  <td>Hours</td>
-                                </tr>
-                                <tr>
                                   <td>Daily</td>
                                   <td>
                                     <input style="width: 50%;" type="float" id="Daily_Charge"></td>
-                                  <td>&nbsp;</td>
-                                </tr>
-                                <tr>
-                                  <td>Offpeak</td>
-                                  <td>
-                                    <input style="width: 50%;" type="float" id="Offpeak_Rate"></td>
-                                  <td>
-                                    <input type="text" id="Offpeak_Hrs"></td>
-                                </tr>
-                                <tr>
-                                  <td>Shoulder</td>
-                                  <td>
-                                    <input style="width: 50%;" type="float" id="Shoulder_Rate"></td>
-                                  <td>
-                                    <input type="text" id="Shoulder_Hrs"></td>
-                                </tr>
-                                <tr>
-                                  <td>Peak</td>
-                                  <td>
-                                    <input style="width: 50%;" type="float" id="Peak_Rate"></td>
-                                  <td>
-                                    <input type="text" id="Peak_Hrs"></td>
+                                  <td>(c/day)</td>
                                 </tr>
                                 <tr>
                                   <td></td>
-                                  <td colspan="2">
-                                    <input type="checkbox" id="gstIncl" name="gstIncl">
-                                    <label for="gstIncl">Price includes GST</label>
+                                  <td>
+                                    <select id="RateType">
+                                      <!-- options to be added via JS -->
+                                    </select>
                                   </td>
-                                </tr>
-                                <tr>
-                                  <td></td>
                                   <td>
                                     <select id="defaults">
                                       <option value="">Load a Default</option>
@@ -193,8 +149,41 @@
                                       <option value="dailyCurve">Peak/Offpeak</option>
                                     </select>
                                   </td>
-                                  <td style="text-align: right;">
-                                    <button id="saveRates" onclick="saveRates()">Save Rates</button></td>
+                                </tr>
+                                <tr>
+                                  <td>&nbsp;</td>
+                                  <td>Rate (c/kWh)</td>
+                                  <td>Hours</td>
+                                </tr>
+                                <tr>
+                                  <td>Rate1</td>
+                                  <td>
+                                    <input style="width: 50%;" type="float" id="Rate1"></td>
+                                  <td>
+                                    <input type="text" id="Hrs1"></td>
+                                </tr>
+                                <tr>
+                                  <td>Rate2</td>
+                                  <td>
+                                    <input style="width: 50%;" type="float" id="Rate2"></td>
+                                  <td>
+                                    <input type="text" id="Hrs2"></td>
+                                </tr>
+                                <tr>
+                                  <td>Rate3</td>
+                                  <td>
+                                    <input style="width: 50%;" type="float" id="Rate3"></td>
+                                  <td>
+                                    <input type="text" id="Hrs3"></td>
+                                </tr>
+                                <tr>
+                                  <td></td>
+                                  <td colspan="2">
+                                    <input type="checkbox" id="gstIncl" name="gstIncl">
+                                    <label for="gstIncl">Price includes GST</label>
+                                    &nbsp;
+                                    &nbsp;
+                                    <button onclick="refreshChart()">Save Rates</button>
                                   </td>
                                 </tr>
                                 </tbody>
@@ -214,10 +203,10 @@
                             <tbody>
                               <tr>
                               <td style="width: 80px;"><button onclick="closeWizard()">Cancel</button></td>
-                              <td style="width: 80px;"><button onclick="refreshChart()">Refresh</button></td>
+                              <td style="width: 80px;">&nbsp;</td>
                               <td style="width: 80px; text-align: right;">
-                                <button onclick="showStep(1)">Previous</button></td>
-                              <td><button id="Finish" disabled onclick="closeWizard()">Finish</button></td>
+                                <button onclick="showStep(2)">Previous</button></td>
+                              <td><button id="Finish" onclick="closeWizard()">Finish</button></td>
                               </tr>
                             </tbody>
                           </table>
@@ -268,109 +257,127 @@
 </div>
 
 <script>
-  // Get the input fields
+  // Basic details input fields
   let Retailer = document.getElementById("Retailer");
   let PlanName = document.getElementById("PlanName");
+  let Region = document.getElementById("Region");
+  let UpdateDate = document.getElementById("UpdateDate");
+  let SourceURL = document.getElementById("SourceURL");
+  let planInfo = [Retailer, PlanName, Region, UpdateDate, SourceURL];
+
+  // Options
+  let AllInclusive = document.getElementById("AllInclusive");
+  let Controlled = document.getElementById("Controlled");
+  let weekend = document.getElementById("weekend");
+  let buyback = document.getElementById("buyback");
+  let EK_HOP = document.getElementById("EK_HOP");
+  let planOptions = [AllInclusive, Controlled, weekend, buyback, EK_HOP];
+
+  // Rates
   let Daily_Charge = document.getElementById("Daily_Charge");
-  let Offpeak_Rate = document.getElementById("Offpeak_Rate");
-  let Offpeak_Hrs = document.getElementById("Offpeak_Hrs");
-  let Shoulder_Hrs = document.getElementById("Shoulder_Hrs");
-  let Shoulder_Rate = document.getElementById("Shoulder_Rate");
-  let Peak_Rate = document.getElementById("Peak_Rate");
-  let Peak_Hrs = document.getElementById("Peak_Hrs");
+
   let RateType = document.getElementById("RateType");
-  let RateValidity = document.getElementById("RateValidity");
   let defaults = document.getElementById("defaults");
+
+  let Rate1 = document.getElementById("Rate1");
+  let Hrs1 = document.getElementById("Hrs1");
+  let Rate2 = document.getElementById("Rate2");
+  let Hrs2 = document.getElementById("Hrs2");
+  let Rate3 = document.getElementById("Rate3");
+  let Hrs3 = document.getElementById("Hrs3");
+
   let gstIncl = document.getElementById("gstIncl");
-  let planInfo = [Retailer, PlanName];
-  let planRates = [RateType, RateValidity, Daily_Charge, Offpeak_Rate, Offpeak_Hrs, Shoulder_Rate, Shoulder_Hrs,
-    Peak_Rate, Peak_Hrs, gstIncl, defaults];
+  
+  let planRates = [RateType, Daily_Charge, Rate1, Hrs1, Rate2, Hrs2,
+    Rate3, Hrs3, gstIncl, defaults];
   
   var dailyRate
+  var rateList
 
   document.addEventListener("DOMContentLoaded", function() {
-    // Add event listener for input event
-    RateType.addEventListener("input", function() {refreshChart()});
-    RateValidity.addEventListener("input", function() {refreshChart()});
-    Offpeak_Rate.addEventListener("input", function() {refreshChart()});
-    Offpeak_Hrs.addEventListener("input", function() {refreshChart()});
-    Shoulder_Hrs.addEventListener("input", function() {refreshChart()});
-    Shoulder_Rate.addEventListener("input", function() {refreshChart()});
-    Peak_Rate.addEventListener("input", function() {refreshChart()});
-    Peak_Hrs.addEventListener("input", function() {refreshChart()});
-    gstIncl.addEventListener("input", function() {refreshChart()});
+    // event listeners for step 2
+    AllInclusive.addEventListener("change", function() {createListOfRates()});
+    Controlled.addEventListener("change", function() {createListOfRates()});
+    weekend.addEventListener("change", function() {createListOfRates()});
+    buyback.addEventListener("change", function() {createListOfRates()});
+
+    // event listeners for step 3
+    RateType.addEventListener("input", function() {loadRatesFromData()});
     defaults.addEventListener("input", function() {
       // console.log("Input value changed:", defaults.value);
       if (defaults.value=='dailyCurve') {
-        Peak_Rate.value = 40;
-        Peak_Hrs.value = '7-9,17-21';
-        Shoulder_Rate.value = 28;
-        Shoulder_Hrs.value = '9-17,21-23';
-        Offpeak_Rate.value = 20;
-        Offpeak_Hrs.value = '23-24,0-7';
-        Retailer.value = 'Retailer';
-        PlanName.value = 'variable';
+        Rate3.value = 40;
+        Hrs3.value = '7-9,17-21';
+        Rate2.value = 28;
+        Hrs2.value = '9-17,21-23';
+        Rate1.value = 20;
+        Hrs1.value = '23-24,0-7';
+        gstIncl.checked=true;
       } else if (defaults.value=='flat') {
-        Peak_Rate.value = 40;
-        Peak_Hrs.value = '0-24';
-        Shoulder_Rate.value = 0;
-        Shoulder_Hrs.value = '';
-        Offpeak_Rate.value = 0;
-        Offpeak_Hrs.value = '';
-        Retailer.value = 'Retailer'
-        PlanName.value = 'flat'
+        Rate1.value = 40;
+        Hrs1.value = '0-24';
+        Rate2.value = 0;
+        Hrs2.value = '';
+        Rate3.value = 0;
+        Hrs3.value = '';
+        gstIncl.checked=true;
       }
       defaults.value=""
       refreshChart()
     })
   });
-  function saveRates() {
-  //this function contains logic for adding plans
-    RateType.style.color = '';
-    RateValidity.style.color = '';
-    if ((RateType.value!=='') && (RateValidity.value!=='')) {
-      if (RateValidity.value==='Both') {
-        if (RateType.value==='All-Inclusive') {
-          RateType.disabled=true; //no other rate types are compatible
-          disableElements(planInfo);
-          disableElements(planRates);
-          document.getElementById("Finish").disabled = false;
+  function createListOfRates() {
+    if (AllInclusive.checked) {
+      rateList = ['All-Inclusive']
+    }
+    else if (Controlled.checked) {
+      rateList = ['Controlled', 'Uncontrolled']
+    }
+    if (weekend.checked) {
+      rateList = [...rateList, ...rateList]
+      rateList.sort();
+      for (let i = 0; i < rateList.length; i++) {
+        if (i % 2 === 0) {
+          rateList[i] = rateList[i] + ' - Weekday';
+        } else {
+          rateList[i] = rateList[i] + ' - Weekend';
         }
-        else if (RateType.value==='Controlled') {
-          RateType.value='Uncontrolled'
-          RateType.disabled=true; //no other rate types are compatible
-        }
-      }
-      dailyRate[dailyRate.length] = JSON.parse(JSON.stringify(dailyRate[0]));
-    }
-    else {
-      if (RateType.value==='') {
-        RateType.style.color = 'red';
-      }
-      if (RateValidity.value==='') {
-        RateValidity.style.color = 'red';
       }
     }
-    // dailyRate[dailyRate.length] = dailyRate[0] //this is a shallow copy
+    if (buyback.checked) {
+      rateList.push('Export')
+    }
+    console.log(rateList)
+    document.getElementById("openStep3").disabled=false;
   }
-  function disableElements(arrayOfElements) {
-    for (var i = 0; i < arrayOfElements.length; i++) {
-      arrayOfElements[i].disabled = true;
+  function openStep3() {
+    // Loop through and remove each option element
+    while (RateType.options.length > 0) {
+      RateType.remove(0); // Remove the first option element (index 0)
     }
-  }
-  function clearElements(arrayOfElements) {
-    for (var i = 0; i < arrayOfElements.length; i++) {
-      arrayOfElements[i].value = '';
-    }
+    
+    // Loop through the options array and create option elements and dailyRate
+    dailyRate = []
+    for (var i = 0; i < rateList.length; i++) {
+      var optionElement = document.createElement("option");
+      optionElement.textContent = rateList[i];
+      RateType.appendChild(optionElement);
+
+      var labels =  rateList[i].split(' - ');
+      var daytype = 'All'
+      if (labels.length>1) {
+        daytype = labels[1];
+      }
+      dailyRate[i] = {
+        'average':new Array(48).fill(0),
+        'month': labels[0],
+        'category': daytype
+      }
+    };
+    // dailyRate[dailyRate.length] = JSON.parse(JSON.stringify(dailyRate[0]));
+    showStep(3)
   }
   function openWizard() {
-    dailyRate = [
-    {
-      'average':new Array(48),
-      'month': 'All',
-      'category': 'Weekday'
-    }
-    ]
     document.getElementById('wizardModal').style.display = 'block';
     showStep(1);
   }
@@ -388,24 +395,24 @@
   function refreshChart() {
     var chartTitle = document.getElementById("Retailer").value + 
       ' - ' + document.getElementById("PlanName").value;
-    dailyRate[0].month = RateType.value;
-    dailyRate[0].category = RateValidity.value;
     var rates = new Array(48).fill(0);
     var GSTmultiplier = 1.15;               //
     if (gstIncl.checked) {GSTmultiplier=1}  //don't add it if GST is already included
-    var Offpeak = convertHrsToIndexes(Offpeak_Hrs.value);
-    updateArrayValuesAtIndexes(rates, Offpeak, (Offpeak_Rate.value*GSTmultiplier));
-    var Shoulder = convertHrsToIndexes(Shoulder_Hrs.value);
-    updateArrayValuesAtIndexes(rates, Shoulder, (Shoulder_Rate.value*GSTmultiplier));
-    var Peak = convertHrsToIndexes(Peak_Hrs.value);
-    updateArrayValuesAtIndexes(rates, Peak, (Peak_Rate.value*GSTmultiplier));
-    dailyRate[0].average = rates;
+    var Offpeak = convertHrsToIndexes(Hrs1.value);
+    updateArrayValuesAtIndexes(rates, Offpeak, (Rate1.value*GSTmultiplier));
+    var Shoulder = convertHrsToIndexes(Hrs2.value);
+    updateArrayValuesAtIndexes(rates, Shoulder, (Rate2.value*GSTmultiplier));
+    var Peak = convertHrsToIndexes(Hrs3.value);
+    updateArrayValuesAtIndexes(rates, Peak, (Rate3.value*GSTmultiplier));
+    dailyRate[RateType.selectedIndex].average = rates;    //add rates to selected plan
+    // console.log(RateType.selectedIndex)
     renderChart('24hrRate', dailyRate, chartTitle, 'c/kWh (incl GST)')
     // console.log(dailyRate)
   }
-  function convertHrsToIndexes(pageNumbers) {
+  function convertHrsToIndexes(hrNumbers) {
+  // takes a string of hr numbers or ranges separated by commas and returns an array of indexes
     const indexes = [];
-    const ranges = pageNumbers.split(',').map(range => range.trim());
+    const ranges = hrNumbers.split(',').map(range => range.trim());
     
     ranges.forEach(range => {
         if (range.includes('-')) {
@@ -428,6 +435,69 @@
     return array;
   }
 
+
+  function loadRatesFromData() {
+  // this function does the opposite of converting Hrs to indexes
+    const savedRates = dailyRate[RateType.selectedIndex].average;
+    const uniqueRates = [...new Set(savedRates)];
+    const listOfRates = [Rate1, Rate2, Rate3];
+    const listOfHrs = [Hrs1, Hrs2, Hrs3];
+    // load rates
+    for (var i = 0; i < 3; i++) {
+      if (i < uniqueRates.length) {
+        listOfRates[i].value=uniqueRates[i];
+      }
+      else {
+        listOfRates[i].value=0;
+      }
+    }
+    gstIncl.checked=true;
+
+    // load hours
+    for (var i = 0; i < 3; i++) {
+      if (i < uniqueRates.length) {
+        const hrsArray = findIndexes(savedRates, uniqueRates[i]);
+        listOfHrs[i].value = convertIndexesToHrs(hrsArray);
+      }
+      else{
+        listOfHrs[i].value = ''
+      }
+    }
+  }
+
+  function findIndexes(array, val) {
+    const indexes = [];
+    for (let i = 0; i < array.length; i++) {
+      if (array[i] === val) {
+        indexes.push(i);
+      }
+      // else {
+      //   console.log(array[i], val);
+      // }
+    }
+    return indexes;
+  }
+  function convertIndexesToHrs(indexes) {
+    let formattedString = '';
+    
+    for (let i = 0; i < indexes.length; i++) {
+        let start = indexes[i];
+        let end = start;
+        
+        while (i + 1 < indexes.length && indexes[i + 1] === end + 1) {
+            end = indexes[i + 1];
+            i++;
+        }
+        
+        if (start !== end) {
+            formattedString += start/2 + '-' + Math.round(end/2) + ', ';
+        } else {
+            formattedString += start/2 + ', ';
+        }
+    }
+    
+    return formattedString.slice(0, -2); // Remove the trailing ', '
+}
 
 const retailerPlanRates = {
 //enter rates here, all excluding GST for simplicity
