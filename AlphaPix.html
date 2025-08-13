@@ -296,6 +296,7 @@ let boardWidth = 32;
 let boardHeight = 32;
 let draggedData = null;
 let canvasGrid = [];
+let libraryBlocks = [];
 
 const boardState = { width: boardWidth, height: boardHeight, blocks: [], canvas: [] };
 const boardContainer = document.getElementById('board');
@@ -348,7 +349,7 @@ function drawCell(ctx, x, y, cellWidth, cellHeight, shape, color) {
 
 // --- Library definition ---
 
-fetch('.fonts/font1.json')
+fetch('fonts/font1.json')
   .then(response => response.json())
   .then(data => {
     console.log(data);
