@@ -1,7 +1,7 @@
 [
   {
     "id": "A",
-    "width": 3,
+    "width": 4,
     "height": 4,
     "cells": [
       [
@@ -16,6 +16,10 @@
         {
           "shape": "tr",
           "color": "#ff0000"
+        },
+        {
+          "shape": "pixel",
+          "color": "#cccccc"
         }
       ],
       [
@@ -30,6 +34,10 @@
         {
           "shape": "pixel",
           "color": "#ff0000"
+        },
+        {
+          "shape": "pixel",
+          "color": "#cccccc"
         }
       ],
       [
@@ -44,6 +52,10 @@
         {
           "shape": "pixel",
           "color": "#ff0000"
+        },
+        {
+          "shape": "pixel",
+          "color": "#cccccc"
         }
       ],
       [
@@ -58,13 +70,17 @@
         {
           "shape": "pixel",
           "color": "#ff0000"
+        },
+        {
+          "shape": "pixel",
+          "color": "#cccccc"
         }
       ]
     ]
   },
   {
     "id": "B",
-    "width": 3,
+    "width": 4,
     "height": 4,
     "cells": [
       [
@@ -79,6 +95,10 @@
         {
           "shape": "tr",
           "color": "#ff0000"
+        },
+        {
+          "shape": "pixel",
+          "color": "#cccccc"
         }
       ],
       [
@@ -93,6 +113,10 @@
         {
           "shape": "br",
           "color": "#ff0000"
+        },
+        {
+          "shape": "pixel",
+          "color": "#cccccc"
         }
       ],
       [
@@ -107,6 +131,10 @@
         {
           "shape": "tr",
           "color": "#ff0000"
+        },
+        {
+          "shape": "pixel",
+          "color": "#cccccc"
         }
       ],
       [
@@ -121,13 +149,17 @@
         {
           "shape": "br",
           "color": "#ff0000"
+        },
+        {
+          "shape": "pixel",
+          "color": "#cccccc"
         }
       ]
     ]
   },
   {
     "id": "C",
-    "width": 3,
+    "width": 4,
     "height": 4,
     "cells": [
       [
@@ -142,6 +174,10 @@
         {
           "shape": "tr",
           "color": "#ff0000"
+        },
+        {
+          "shape": "pixel",
+          "color": "#cccccc"
         }
       ],
       [
@@ -156,6 +192,10 @@
         {
           "shape": "pixel",
           "color": "#c0c0c0"
+        },
+        {
+          "shape": "pixel",
+          "color": "#cccccc"
         }
       ],
       [
@@ -170,6 +210,10 @@
         {
           "shape": "pixel",
           "color": "#c0c0c0"
+        },
+        {
+          "shape": "pixel",
+          "color": "#cccccc"
         }
       ],
       [
@@ -184,6 +228,10 @@
         {
           "shape": "br",
           "color": "#ff0000"
+        },
+        {
+          "shape": "pixel",
+          "color": "#cccccc"
         }
       ]
     ]

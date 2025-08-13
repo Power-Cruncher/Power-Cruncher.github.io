@@ -194,13 +194,6 @@
 <body>
 
 <div id="sidebar">
-  <div>
-    <label>Board Size:</label>
-    <input type="number" id="boardHeight" value="32" min="8" max="128"> ×
-    <input type="number" id="boardWidth" value="32" min="8" max="128">
-    <button id="generateBoard">Generate Board</button>
-  </div>
-
   <label>Library Blocks:</label>
   <div id="library"></div>
 
@@ -252,10 +245,17 @@
     </div>
     <div>
       <label>Library Items:</label>
-      <div id="library-textbox"></div>
+      <textarea id="library-textbox"></textarea>
     </div>
   </div>
   
+  <div>
+    <label>Board Size:</label>
+    <input type="number" id="boardHeight" value="2" min="8" max="128"> ×
+    <input type="number" id="boardWidth" value="2" min="8" max="128">
+    <button id="generateBoard">Resize</button>
+  </div>
+
   <div id="canvas-editor">
     <h3>Canvas Editor</h3>
     <div style="display: flex; gap: 20px; margin-bottom: 10px;">
@@ -296,7 +296,25 @@ let boardWidth = 32;
 let boardHeight = 32;
 let draggedData = null;
 let canvasGrid = [];
-let libraryBlocks = [];
+// let libraryBlocks = [];
+let libraryBlocks = [
+  {
+    id: 'block1',
+    width: 3,
+    height: 5,
+    cells: Array.from({length: 5}, (_, row) =>
+      Array.from({length: 3}, (_, col) => {
+        // Corners get quarter-circles
+        if (row === 0 && col === 0) return { shape: 'tl', color: '#ff0000'};
+        if (row === 0 && col === 2) return { shape: 'tr', color: '#00ff00'};
+        if (row === 4 && col === 0) return { shape: 'bl', color: '#0000ff'};
+        if (row === 4 && col === 2) return { shape: 'br', color: '#ff00ff'};
+        // Rest are plain pixels
+        return { shape: 'pixel', color: '#cccccc' };
+      })
+    )
+  }
+];
 
 const boardState = { width: boardWidth, height: boardHeight, blocks: [], canvas: [] };
 const boardContainer = document.getElementById('board');
@@ -348,15 +366,14 @@ function drawCell(ctx, x, y, cellWidth, cellHeight, shape, color) {
 }
 
 // --- Library definition ---
-
-fetch('fonts/font1.json')
-  .then(response => response.json())
-  .then(data => {
-    console.log(data);
-    // Use data here
-    libraryBlocks = data
-  })
-  .catch(error => console.error('Error loading JSON:', error));
+function importFromJSON() {
+  fetch('fonts/font1.json')
+    .then(response => response.json())
+    .then(data => {
+      return data;
+    })
+    .catch(error => console.error('Error loading JSON:', error));
+}
 
 // --- Render a block to canvas ---
 function renderBlockToCanvas(blockData) {
@@ -406,47 +423,23 @@ function renderLibrary() {
     });
     lib.appendChild(canvas);
   });
-  
-  renderLibraryTextbox();
 }
 
-// --- Render Library Textbox ---
-function renderLibraryTextbox() {
-  const textbox = document.getElementById('library-textbox');
-  textbox.innerHTML = '';
-  
-  libraryBlocks.forEach((block, index) => {
-    const item = document.createElement('div');
-    item.className = 'library-item';
-    
-    const canvas = document.createElement('canvas');
-    canvas.width = 60;
-    canvas.height = 60;
-    canvas.style.width = '60px';
-    canvas.style.height = '60px';
-    const ctx = canvas.getContext('2d');
-    const cellW = 60 / block.width;
-    const cellH = 60 / block.height;
-    
-    block.cells.forEach((row, y) => {
-      row.forEach((cell, x) => {
-        drawCell(ctx, x * cellW, y * cellH, cellW, cellH, cell.shape, cell.color);
-      });
+// Trigger on any text input
+const textbox = document.getElementById('library-textbox');
+textbox.addEventListener('input', function () {
+  const currentText  = textbox.value;
+  // loop through each text input and try to match a block from the library
+  if (currentText.length > 0) {
+    const input = currentText[currentText.length - 1];
+    libraryBlocks.forEach((block, index) => {
+      if (input == block.id) {
+        addBlockToMainCanvas(block);
+        console.log(block.id);
+      }
     });
-    
-    const label = document.createElement('span');
-    label.textContent = block.id;
-    
-    item.appendChild(canvas);
-    item.appendChild(label);
-    
-    item.addEventListener('click', () => {
-      addBlockToMainCanvas(block);
-    });
-    
-    textbox.appendChild(item);
-  });
-}
+  }
+});
 
 function selectLibraryBlock(index, canvas) {
   document.querySelectorAll('.block').forEach(b => b.classList.remove('selected'));
@@ -471,12 +464,14 @@ function addBlockToMainCanvas(blockData) {
   }
 }
 
+
+// libraryBlocks = importFromJSON();
 renderLibrary();
 
 // --- Generate Board ---
 function generateBoard() {
-  boardWidth = parseInt(boardInputWidth.value);
-  boardHeight = parseInt(boardInputHeight.value);
+  boardWidth = parseInt(boardInputWidth.value)*16;
+  boardHeight = parseInt(boardInputHeight.value)*16;
   boardState.width = boardWidth;
   boardState.height = boardHeight;
   boardState.blocks = [];
@@ -912,7 +907,8 @@ document.getElementById('saveBlockEdit').addEventListener('click', () => {
   }
   
   editingBlock.id = newId;
-  
+  console.log(editingBlock.id);
+  console.log(newId);
   if (selectedLibraryBlock !== null) {
     // Editing existing block
     libraryBlocks[selectedLibraryBlock] = editingBlock;
@@ -932,13 +928,6 @@ function closeBlockEditor() {
   editingBlock = null;
   selectedLibraryBlock = null;
 }
-
-//countTiles ---
-document.getElementById('countTiles').addEventListener('click', () => {
-  // boardJson.value = Array.from(countUniqueShapeColor(boardState)).join('\n');
-  boardJson.value = JSON.stringify(countUniqueShapeColor(boardState));
-  console.log(countUniqueShapeColor(boardState));
-});
 
 function countUniqueShapeColor(data) {
   // const uniqueSet = new Set();
