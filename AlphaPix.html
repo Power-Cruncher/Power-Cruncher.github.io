@@ -371,6 +371,15 @@ function importFromJSON() {
     .then(response => response.json())
     .then(data => {
       return data;
+      data.forEach(block => {
+        const exists = libraryBlocks.some(b => b.id === block.id);
+        if (!exists) {
+          libraryBlocks.push(block);
+        }
+      });
+
+      // Render library after import
+      renderLibrary();
     })
     .catch(error => console.error('Error loading JSON:', error));
 }
@@ -465,7 +474,7 @@ function addBlockToMainCanvas(blockData) {
 }
 
 
-// libraryBlocks = importFromJSON();
+importFromJSON();
 renderLibrary();
 
 // --- Generate Board ---
