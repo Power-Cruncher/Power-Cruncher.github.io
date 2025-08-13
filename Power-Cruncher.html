@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NZ Electricity Retailer Comparison</title>
+  <!-- Include Chart.js library (you can download or use CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+  <style>
+    /* CSS styling for the modal overlay */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+    }
+    .modal-content {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 5px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    }
+    .step {
+        display: none;
+    }
+    .step.active {
+        display: block;
+    }
+  </style>
+</head>
+
+<body>
+<p>This website processes a CSV file containing NZ electricity retail data, calculates the monthly totals, and displays two separate smaller graphs - one for weekends and another for weekdays.</p>
+
+<!-- Container for CSV type selection, file input, and tabs -->
+<div>
+  <ol>
+    <!--//https://www.ea.govt.nz/industry/consumer-data/ -->
+    <li>
+      Request at least a year's data from your current power company/retailer.<a href="https://www.ea.govt.nz/industry/retail/eieps/">(EIEP13A)</a> </li>
+    </li>
+    <li>
+    Upload CSV from step 1 <input type="file" id="fileInput" accept=".csv" />
+    <!-- File input and process button -->
+    <li>
+      <!-- CSV type selection dropdown -->
+      <label for="csvTypeSelect">Select CSV Type:</label>
+      <select id="csvTypeSelect">
+        <option value="EIEP13A">EIEP13A</option>
+        <option value="ElectricKiwi">Electric Kiwi</option>
+        <!-- Add more options as needed -->
+      </select>
+      <button onclick="processCSV()">Load CSV</button>
+    </li>
+    <li>
+      Load or build power plans you want to compare
+      <button onclick="openWizard()">Open Wizard</button>
+      
+      <div class="modal-overlay" id="wizardModal">
+          <div class="modal-content">
+              <div class="wizard">
+                  <div class="step" id="step1">
+                    <b>New Power Plan Wizard - Plan Details</b><br><br>
+                    <table border="1">
+                      <tbody>
+                        <tr><td>Retailer</td> <td colspan="3"><input type="text" id="Retailer"></td></tr>
+                        <tr><td>Plan</td>     <td colspan="3"><input type="text" id="PlanName"></td></tr>
+                        <tr><td>Region</td>   <td colspan="3"><input type="text" id="Region"></td></tr>
+                        <tr><td>Date</td>     <td colspan="3"><input type="date" id="UpdateDate"></td></tr>
+                        <tr><td>Source</td>   <td colspan="3"><input type="text" id="SourceURL"></td></tr>
+                        <tr>
+                          <td style="width: 80px;"><button onclick="closeWizard()">Cancel</button></td>
+                          <td style="width: 80px;">&nbsp;</td>
+                          <td style="width: 80px;">&nbsp;</td>
+                          <td><button onclick="showStep(2)">Next</button></td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div class="step" id="step2">
+                    <b>New Power Plan Wizard</b><br><br>
+                    <table border="1">
+                      <tbody>
+                        <tr><td colspan="4">
+                          <input type="radio" id="AllInclusive" name="plan" value="All-Inclusive" /> 
+                          <label for="AllInclusive">All-Inclusive</label><br />
+                          <input type="radio" id="Controlled" name="plan" value="Controlled" /> 
+                          <label for="Controlled">Controlled/Uncontrolled</label>
+                        </td></tr>
+                        <tr><td>&nbsp;</td></tr>
+                        <tr><td colspan="4">
+                          <input type="checkbox" id="weekend" name="weekend">
+                          <label for="weekend">Build separate weekend rates</label><br>
+                          
+                          <input type="checkbox" id="buyback" name="buyback">
+                          <label for="buyback">Build export/solar buyback rates</label><br>
+                          
+                          <input type="checkbox" id="EK_HOP" name="EK_HOP">
+                          <label for="EK_HOP">Calculate "Hour of Power" [Electric Kiwi]</label><br>
+                        </td></tr>
+                        <tr>
+                          <td style="width: 80px;"><button onclick="closeWizard()">Cancel</button></td>
+                          <td style="width: 80px;">&nbsp;</td>
+                          <td style="width: 80px; text-align: right;">
+                            <button onclick="showStep(1)">Previous</button></td>
+                          <td><button id="openStep3" disabled onclick="openStep3()">Next</button></td>
+                          </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div class="step" id="step2">
+                    <b>New Power Plan Wizard - Add Rates</b><br><br>
+                    <table border="1">
+                      <tbody>
+                        <tr>
+                          <td>
+                          <table border="1">
+                            <tbody>
+                              <tr>
+                                <td style="width: 50%;">
+                                <table border="1">
+                                <tbody>
+                                <tr>
+                                  <td>Daily</td>
+                                  <td>
+                                    <input style="width: 50%;" type="float" id="Daily_Charge"></td>
+                                  <td>(c/day)</td>
+                                </tr>
+                                <tr>
+                                  <td></td>
+                                  <td>
+                                    <select id="RateType">
+                                      <!-- options to be added via JS -->
+                                    </select>
+                                  </td>
+                                  <td>
+                                    <select id="defaults">
+                                      <option value="">Load a Default</option>
+                                      <option value="flat">Flat</option>
+                                      <option value="dailyCurve">Peak/Offpeak</option>
+                                    </select>
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <td>&nbsp;</td>
+                                  <td>Rate (c/kWh)</td>
+                                  <td>Hours</td>
+                                </tr>
+                                <tr>
+                                  <td>Rate1</td>
+                                  <td>
+                                    <input style="width: 50%;" type="float" id="Rate1"></td>
+                                  <td>
+                                    <input type="text" id="Hrs1"></td>
+                                </tr>
+                                <tr>
+                                  <td>Rate2</td>
+                                  <td>
+                                    <input style="width: 50%;" type="float" id="Rate2"></td>
+                                  <td>
+                                    <input type="text" id="Hrs2"></td>
+                                </tr>
+                                <tr>
+                                  <td>Rate3</td>
+                                  <td>
+                                    <input style="width: 50%;" type="float" id="Rate3"></td>
+                                  <td>
+                                    <input type="text" id="Hrs3"></td>
+                                </tr>
+                                <tr>
+                                  <td></td>
+                                  <td colspan="2">
+                                    <input type="checkbox" id="gstIncl" name="gstIncl">
+                                    <label for="gstIncl">Price includes GST</label>
+                                    &nbsp;
+                                    &nbsp;
+                                    <button onclick="refreshChart()">Save Rates</button>
+                                  </td>
+                                </tr>
+                                </tbody>
+                                </table>
+                                </td>
+                                <td>
+                                  <canvas id="24hrRate" width="400" height="200" style="border: 1px solid #ddd; border-radius: 5px;"></canvas>
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                          </td>
+                        </tr>
+                        <tr>
+                        <td>
+                          <table border="1">
+                            <tbody>
+                              <tr>
+                              <td style="width: 80px;"><button onclick="closeWizard()">Cancel</button></td>
+                              <td style="width: 80px;">&nbsp;</td>
+                              <td style="width: 80px; text-align: right;">
+                                <button onclick="showStep(2)">Previous</button></td>
+                              <td><button id="Finish" onclick="closeWizard()">Finish</button></td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+              </div>
+          </div>
+      </div>
+
+    </li>
+  </ol>
+  <p></p>
+  <!-- <input type="checkbox" id="registryChannelIndexCheckbox" name="registryChannelIndexCheckbox">
+  <label for="registryChannelIndexCheckbox">Registry Channel Index</label> -->
+
+  <!-- Tabs -->
+  <div>
+    <button onclick="showUsageTab()">Usage Visualization</button>
+    <button onclick="showBillTab()">Calculated Bill by Retailer</button>
+  </div>
+
+  <!-- Content for Usage Visualization Tab -->
+  <div id="usageContent" style="display: none; border: 2px solid #ddd; padding: 10px; border-radius: 10px; margin-top: 10px;">
+    <!-- Canvas to render the chart for weekdays -->
+    <canvas id="weekdayChart" width="400" height="200" style="border: 1px solid #ddd; border-radius: 5px;"></canvas>
+
+    <!-- Canvas to render the chart for weekends -->
+    <canvas id="weekendChart" width="400" height="200" style="border: 1px solid #ddd; border-radius: 5px; margin-top: 10px;"></canvas>
+  </div>
+
+  <!-- Content for Calculated Bill by Retailer Tab -->
+  <div id="billContent" style="display: none; border: 2px solid #ddd; padding: 10px; border-radius: 10px; margin-top: 10px;">
+    <h2>Calculated Bill by Retailer</h2>
+    <table border="1" cellpadding="5">
+      <thead>
+        <tr id="billTableHeader">
+          <!-- Populated dynamically based on processed CSV -->
+        </tr>
+      </thead>
+      <tbody id="billTableBody">
+        <!-- Populated dynamically based on processed CSV -->
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  // Basic details input fields
+  let Retailer = document.getElementById("Retailer");
+  let PlanName = document.getElementById("PlanName");
+  let Region = document.getElementById("Region");
+  let UpdateDate = document.getElementById("UpdateDate");
+  let SourceURL = document.getElementById("SourceURL");
+  let planInfo = [Retailer, PlanName, Region, UpdateDate, SourceURL];
+
+  // Options
+  let AllInclusive = document.getElementById("AllInclusive");
+  let Controlled = document.getElementById("Controlled");
+  let weekend = document.getElementById("weekend");
+  let buyback = document.getElementById("buyback");
+  let EK_HOP = document.getElementById("EK_HOP");
+  let planOptions = [AllInclusive, Controlled, weekend, buyback, EK_HOP];
+
+  // Rates
+  let Daily_Charge = document.getElementById("Daily_Charge");
+
+  let RateType = document.getElementById("RateType");
+  let defaults = document.getElementById("defaults");
+
+  let Rate1 = document.getElementById("Rate1");
+  let Hrs1 = document.getElementById("Hrs1");
+  let Rate2 = document.getElementById("Rate2");
+  let Hrs2 = document.getElementById("Hrs2");
+  let Rate3 = document.getElementById("Rate3");
+  let Hrs3 = document.getElementById("Hrs3");
+
+  let gstIncl = document.getElementById("gstIncl");
+  
+  let planRates = [RateType, Daily_Charge, Rate1, Hrs1, Rate2, Hrs2,
+    Rate3, Hrs3, gstIncl, defaults];
+  
+  var dailyRate
+  var rateList
+
+  document.addEventListener("DOMContentLoaded", function() {
+    // event listeners for step 2
+    AllInclusive.addEventListener("change", function() {createListOfRates()});
+    Controlled.addEventListener("change", function() {createListOfRates()});
+    weekend.addEventListener("change", function() {createListOfRates()});
+    buyback.addEventListener("change", function() {createListOfRates()});
+
+    // event listeners for step 3
+    RateType.addEventListener("input", function() {loadRatesFromData()});
+    defaults.addEventListener("input", function() {
+      // console.log("Input value changed:", defaults.value);
+      if (defaults.value=='dailyCurve') {
+        Rate3.value = 40;
+        Hrs3.value = '7-9,17-21';
+        Rate2.value = 28;
+        Hrs2.value = '9-17,21-23';
+        Rate1.value = 20;
+        Hrs1.value = '23-24,0-7';
+        gstIncl.checked=true;
+      } else if (defaults.value=='flat') {
+        Rate1.value = 40;
+        Hrs1.value = '0-24';
+        Rate2.value = 0;
+        Hrs2.value = '';
+        Rate3.value = 0;
+        Hrs3.value = '';
+        gstIncl.checked=true;
+      }
+      defaults.value=""
+      refreshChart()
+    })
+  });
+  function createListOfRates() {
+    if (AllInclusive.checked) {
+      rateList = ['All-Inclusive']
+    }
+    else if (Controlled.checked) {
+      rateList = ['Controlled', 'Uncontrolled']
+    }
+    if (weekend.checked) {
+      rateList = [...rateList, ...rateList]
+      rateList.sort();
+      for (let i = 0; i < rateList.length; i++) {
+        if (i % 2 === 0) {
+          rateList[i] = rateList[i] + ' - Weekday';
+        } else {
+          rateList[i] = rateList[i] + ' - Weekend';
+        }
+      }
+    }
+    if (buyback.checked) {
+      rateList.push('Export')
+    }
+    console.log(rateList)
+    document.getElementById("openStep3").disabled=false;
+  }
+  function openStep3() {
+    // Loop through and remove each option element
+    while (RateType.options.length > 0) {
+      RateType.remove(0); // Remove the first option element (index 0)
+    }
+    
+    // Loop through the options array and create option elements and dailyRate
+    dailyRate = []
+    for (var i = 0; i < rateList.length; i++) {
+      var optionElement = document.createElement("option");
+      optionElement.textContent = rateList[i];
+      RateType.appendChild(optionElement);
+
+      var labels =  rateList[i].split(' - ');
+      var daytype = 'All'
+      if (labels.length>1) {
+        daytype = labels[1];
+      }
+      dailyRate[i] = {
+        'average':new Array(48).fill(0),
+        'month': labels[0],
+        'category': daytype
+      }
+    };
+    // dailyRate[dailyRate.length] = JSON.parse(JSON.stringify(dailyRate[0]));
+    showStep(3)
+  }
+  function openWizard() {
+    document.getElementById('wizardModal').style.display = 'block';
+    showStep(1);
+  }
+  function closeWizard(savePlan=false) {
+    // clearElements(planInfo);
+    // clearElements(planRates);
+    destroyChart('24hrRate');
+    document.getElementById('wizardModal').style.display = 'none';
+  }
+  function showStep(stepIndex) {
+    const steps = document.querySelectorAll('.step');
+    steps.forEach(step => step.classList.remove('active'));
+    steps[stepIndex - 1].classList.add('active');
+  }
+  function refreshChart() {
+    var chartTitle = document.getElementById("Retailer").value + 
+      ' - ' + document.getElementById("PlanName").value;
+    var rates = new Array(48).fill(0);
+    var GSTmultiplier = 1.15;               //
+    if (gstIncl.checked) {GSTmultiplier=1}  //don't add it if GST is already included
+    var Offpeak = convertHrsToIndexes(Hrs1.value);
+    updateArrayValuesAtIndexes(rates, Offpeak, (Rate1.value*GSTmultiplier));
+    var Shoulder = convertHrsToIndexes(Hrs2.value);
+    updateArrayValuesAtIndexes(rates, Shoulder, (Rate2.value*GSTmultiplier));
+    var Peak = convertHrsToIndexes(Hrs3.value);
+    updateArrayValuesAtIndexes(rates, Peak, (Rate3.value*GSTmultiplier));
+    dailyRate[RateType.selectedIndex].average = rates;    //add rates to selected plan
+    // console.log(RateType.selectedIndex)
+    renderChart('24hrRate', dailyRate, chartTitle, 'c/kWh (incl GST)')
+    // console.log(dailyRate)
+  }
+  function convertHrsToIndexes(hrNumbers) {
+  // takes a string of hr numbers or ranges separated by commas and returns an array of indexes
+    const indexes = [];
+    const ranges = hrNumbers.split(',').map(range => range.trim());
+    
+    ranges.forEach(range => {
+        if (range.includes('-')) {
+            const [start, end] = range.split('-').map(num => parseInt(num.trim()));
+            for (let i = start*2; i < end*2; i++) {
+                indexes.push(i);
+            }
+        } else {
+            indexes.push(parseInt(range)*2);
+        }
+    });  
+    return indexes;
+  }
+  function updateArrayValuesAtIndexes(array, indexes, value) {
+    indexes.forEach(index => {
+        if (index >= 0 && index < array.length) {
+            array[index] = value;
+        }
+    });
+    return array;
+  }
+
+
+  function loadRatesFromData() {
+  // this function does the opposite of converting Hrs to indexes
+    const savedRates = dailyRate[RateType.selectedIndex].average;
+    const uniqueRates = [...new Set(savedRates)];
+    const listOfRates = [Rate1, Rate2, Rate3];
+    const listOfHrs = [Hrs1, Hrs2, Hrs3];
+    // load rates
+    for (var i = 0; i < 3; i++) {
+      if (i < uniqueRates.length) {
+        listOfRates[i].value=uniqueRates[i];
+      }
+      else {
+        listOfRates[i].value=0;
+      }
+    }
+    gstIncl.checked=true;
+
+    // load hours
+    for (var i = 0; i < 3; i++) {
+      if (i < uniqueRates.length) {
+        const hrsArray = findIndexes(savedRates, uniqueRates[i]);
+        listOfHrs[i].value = convertIndexesToHrs(hrsArray);
+      }
+      else{
+        listOfHrs[i].value = ''
+      }
+    }
+  }
+
+  function findIndexes(array, val) {
+    const indexes = [];
+    for (let i = 0; i < array.length; i++) {
+      if (array[i] === val) {
+        indexes.push(i);
+      }
+      // else {
+      //   console.log(array[i], val);
+      // }
+    }
+    return indexes;
+  }
+  function convertIndexesToHrs(indexes) {
+    let formattedString = '';
+    
+    for (let i = 0; i < indexes.length; i++) {
+        let start = indexes[i];
+        let end = start;
+        
+        while (i + 1 < indexes.length && indexes[i + 1] === end + 1) {
+            end = indexes[i + 1];
+            i++;
+        }
+        
+        if (start !== end) {
+            formattedString += start/2 + '-' + Math.round(end/2) + ', ';
+        } else {
+            formattedString += start/2 + ', ';
+        }
+    }
+    
+    return formattedString.slice(0, -2); // Remove the trailing ', '
+}
+
+const retailerPlanRates = {
+//enter rates here, all excluding GST for simplicity
+//  (most retailers disclose prices this way)
+  // 'daily': {        // added as a retailer to sanity check daily charges
+  //   'daily': 100,
+  //   'variable': 0,
+  // },
+  // 'variable': {     // added as a retailer to sanity check variable charges
+  //   'daily': 0,
+  //   'variable': 100,
+  // },
+  //https://www.powershop.co.nz/our-rates/
+  'Frank Energy': {
+    'daily': 135,     //  c/day (excl GST)
+    'variable': 22.4, //  c/kwh (excl GST)
+  },
+  'Genesis - Energy Basic': {
+    'daily': 203,
+    'variable': 22
+  },
+  'Genesis: Energy Plus': {
+    'daily': 231,
+    'variable': 25
+  },
+  'Mercury: 1year fixed': {
+    'daily': 204.32,
+    'variable': 18.65
+  },
+  'Pulse Energy: ': {
+    'daily': 247,
+    'variable': 19.543
+  },
+  'Trustpower': {
+    'daily': 179,
+    'variable': 20.42
+  },
+  'Electric Kiwi: Loyal Kiwi': {
+    'daily': 215,
+    'variable': 26.65
+  }
+  // Add more retailers as needed and extend to 
+};
+
+function calculateBillData(monthlyData) {
+  const retailers = Object.keys(retailerPlanRates);
+  const months = Array.from(monthlyData.keys());
+  const billData = [];
+
+  // console.log(monthlyData)
+
+  retailers.forEach((retailer) => {
+    const retailerRow = { retailer };
+    months.forEach((month) => {
+      
+      const dailyRate = retailerPlanRates[retailer]['daily']
+      const variableRate = retailerPlanRates[retailer]['variable']
+
+      const daysInMonth = 28  //need to fix monthlyData to get appropriate level of detail for the bill checker
+      // Use reduce to sum the values in the array
+      const totalValue = Object.values(monthlyData.get(month))
+        .flatMap(array => array)  
+        .reduce((total, value) => total + value, 0);
+
+      //console.log(daysInMonth, dailyRate, totalValue, variableRate)
+      
+      const totalBill = ((daysInMonth * dailyRate) + (totalValue * variableRate))/100;
+      retailerRow[month] = totalBill.toFixed(2);
+    });
+
+    billData.push(retailerRow);
+  });
+
+  // console.log(billData)
+  return billData;
+}
+
+function renderBillTable(billData) {
+  // console.log(billData)
+  const tableHeader = document.getElementById('billTableHeader');
+  const tableBody = document.getElementById('billTableBody');
+
+  // Clear existing table content
+  tableHeader.innerHTML = '';
+  tableBody.innerHTML = '';
+
+  // Sort months based on the first row of data (assuming the first row contains all months)
+  const sortedMonths = Object.keys(billData[0]).filter(key => key !== 'retailer');
+
+  // Populate table header
+  const headerRow = document.createElement('tr');
+  headerRow.innerHTML = '<th>Retailer</th>' + sortedMonths.map(month => `<th>${month}</th>`).join('');
+  tableBody.appendChild(headerRow);
+
+  // Populate table body
+  billData.forEach((row) => {
+    const tableRow = document.createElement('tr');
+    Object.keys(row).forEach((key) => {
+      const cell = document.createElement('td');
+      cell.textContent = row[key];
+      tableRow.appendChild(cell);
+    });
+    tableBody.appendChild(tableRow);
+  });
+}
+
+function parseCSV(csvString, delimiter = ',') {
+    // Split the CSV string into an array of rows
+    const rows = csvString.trim().split(/\r?\n/);
+
+    // Initialize an array to hold the parsed data
+    const data = [];
+
+    // Iterate through each row
+    rows.forEach(row => {
+        let values = [];
+        let quotedField = false;
+        let currentValue = '';
+
+        // Process each character in the row
+        for (let i = 0; i < row.length; i++) {
+            const char = row[i];
+
+            if (char === '"') {
+                quotedField = !quotedField;
+            } else if (char === delimiter && !quotedField) {
+                // If delimiter is found and not within a quoted field, push the current value to the values array
+                values.push(currentValue.trim());
+                currentValue = '';
+            } else {
+                currentValue += char;
+            }
+        }
+        // Push the last value to the values array
+        values.push(currentValue.trim());
+        data.push(values);
+    });
+
+    return data;
+}
+
+function processCSV() {
+  const fileInput = document.getElementById('fileInput');
+  const csvTypeSelect = document.getElementById('csvTypeSelect');
+  const selectedCsvType = csvTypeSelect.value;
+
+  // Check if a file is selected
+  if (fileInput.files.length === 0) {
+    alert('Please select a CSV file.');
+    return;
+  }
+
+  const file = fileInput.files[0];
+  const reader = new FileReader();
+
+  reader.onload = function (e) {
+    const csvContent = e.target.result;
+    const data = parseCSV(csvContent, ',')
+    console.log(data)
+
+    // Create a map to store data as date: list of 48 value pairs
+    const dailyData = new Map();
+
+    switch (selectedCsvType) {
+      case'ElectricKiwi':
+        console.log('processing "ElectricKiwi" format');
+        // find columns and stop processing if not found
+        let Read_Date
+        if (data[0].includes('Read Date')) {
+          Read_Date = data[0].indexOf('Read Date');
+        } else if (data[0].includes('Read_Date')) {
+          Read_Date = data[0].indexOf('Read_Date');
+        } else {
+          alert('"Read Date"/"Read_Date" column not found');
+          return;
+        }
+        let startValue
+        if (data[0].includes('Interval 1')) {
+          startValue = data[0].indexOf('Interval 1');
+        } else if (data[0].includes('0:00')) {
+          startValue = data[0].indexOf('0:00');
+        } else {
+          alert('"Interval 1"/"0:00" column not found');
+          return;
+        }
+        let endValue
+        if (data[0].includes('Interval 48')) {
+          endValue = data[0].indexOf('Interval 48');
+        } else if (data[0].includes('23:30')) {
+          endValue = data[0].indexOf('23:30');
+        } else {
+          alert('"Interval 48"/"23:30" column not found');
+          return;
+        }
+        // console.log('column assignments made')
+        // console.log(data.length)
+        // Process CSV data (1st row is header data)
+        for (let i = 1; i < data.length; i++) {
+          const column = data[i];
+          let date = detectAndParseDate(column[Read_Date]);
+          // Initialize the array for the date if it doesn't exist
+          if (!dailyData.has(date)) {
+            dailyData.set(date, new Array(48).fill(0));
+          }
+          // Accumulate values for each column
+          for (let j = startValue; j <= endValue; j++) {
+            const value = parseFloat(column[j]);
+            if (!isNaN(value)) {
+              dailyData.get(date)[j - startValue] += value;
+            }
+          }
+        }
+        break;
+      case 'EIEP13A':
+        console.log('processing "EIEP13A" format');
+        alert('EIEP13A format not implemented');
+        return;
+        break;
+    }
+
+    // console.log(dailyData)
+    // Display the result as graphs
+    const monthlyData = formatDataForCharts(dailyData);
+    // console.log(monthlyData)
+    renderCharts(monthlyData);
+
+    // Calculate bill data and render the bill table
+    const billData = calculateBillData(monthlyData);
+    renderBillTable(billData);
+
+    //show charts by default
+    showUsageTab()
+  };
+
+  reader.readAsText(file);
+}
+
+function detectAndParseDate(dateString) {
+  // Add more date format detection and parsing logic as needed
+  const dateFormats = [
+    { format: 'D/MM/YYYY', regex: /^\d{1,2}\/\d{2}\/\d{4}$/ },
+    { format: 'YYYY-MM-DD', regex: /^\d{4}-\d{2}-\d{2}$/ },
+    // Add more formats if required
+  ];
+
+  for (const { format, regex } of dateFormats) {
+    if (regex.test(dateString)) {
+      return moment(dateString, format).format('YYYY-MM-DD');
+    }
+  }
+
+  // Default to returning the original string if no match is found
+  return dateString;
+}
+
+
+function formatDataForCharts(dailyData) {
+  const monthlyData = new Map();
+
+  dailyData.forEach((values, date) => {
+    // Extract month from the date in the format yyyy-mm-dd
+    const [year, month] = date.split('-').slice(0, 2);
+
+    // Initialize the object for the month if it doesn't exist
+    if (!monthlyData.has(month)) {
+      monthlyData.set(month, {
+        Weekday: new Array(48).fill(0),
+        Weekend: new Array(48).fill(0)
+      });
+    }
+
+    // Accumulate values for each column based on day of the week
+    const dayOfWeek = new Date(date).getDay();
+    const category = dayOfWeek >= 1 && dayOfWeek <= 5 ? 'Weekday' : 'Weekend';
+    for (let i = 0; i < values.length; i++) {
+      monthlyData.get(month)[category][i] += values[i];
+    }
+  });
+
+  return monthlyData;
+}
+
+function renderCharts(monthlyData) {
+  // Separate data for weekdays and weekends
+  const weekdays = Array.from(monthlyData.keys()).map(month => ({
+    month,
+    category: 'Weekday',
+    average: monthlyData.get(month).Weekday.map(value => value / monthlyData.size),
+  }));
+
+  const weekends = Array.from(monthlyData.keys()).map(month => ({
+    month,
+    category: 'Weekend',
+    average: monthlyData.get(month).Weekend.map(value => value / monthlyData.size),
+  }));
+  console.log("renderCharts()")
+  console.log(weekdays)
+  renderChart('weekdayChart', weekdays, 'Weekday Chart', "Average Value");
+  renderChart('weekendChart', weekends, 'Weekend Chart', "Average Value");
+}
+
+function destroyChart(canvasId) {
+  // Destroy existing chart if it exists
+  const canvasElement = document.getElementById(canvasId);
+  const existingChart = Chart.getChart(canvasElement);
+  
+  if (existingChart) {
+    existingChart.destroy();
+  }
+}
+
+function renderChart(canvasId, data, chartTitle, yAxisLabel) {
+  const labels = Array.from({ length: 48 }, (_, i) => `${i / 2}`);
+  const datasets = data.map((dataItem) => ({
+    label: `${dataItem.month} - ${dataItem.category}`,
+    data: dataItem.average,
+    borderColor: getRandomColor(),
+    fill: false,
+  }));
+
+  destroyChart(canvasId)
+  const canvasElement = document.getElementById(canvasId);
+  const ctx = canvasElement.getContext("2d");
+  new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: labels,
+      datasets: datasets,
+    },
+    options: {
+      scales: {
+        x: {
+          title: {
+            display: true,
+            text: "Hour",
+          },
+        },
+        y: {
+          title: {
+            display: true,
+            text: yAxisLabel,
+          },
+        },
+      },
+      plugins: {
+        title: {
+          display: true,
+          text: chartTitle,
+        },
+      },
+    },
+  });
+}
+
+// Placeholder function to get random color
+function getRandomColor() {
+  const letters = '0123456789ABCDEF';
+  let color = '#';
+  for (let i = 0; i < 6; i++) {
+    color += letters[Math.floor(Math.random() * 16)];
+  }
+  return color;
+}
+
+// Placeholder function to get month from Read Date
+function getMonthFromReadDate(readDate) {
+  const date = new Date(readDate);
+  return date.toLocaleString('en-US', { month: 'short' });
+}
+
+// Functions to show/hide tabs
+function showUsageTab() {
+  document.getElementById('usageContent').style.display = 'block';
+  document.getElementById('billContent').style.display = 'none';
+}
+
+function showBillTab() {
+  document.getElementById('usageContent').style.display = 'none';
+  document.getElementById('billContent').style.display = 'block';
+}
+</script>
+
+</body>
+</html>
