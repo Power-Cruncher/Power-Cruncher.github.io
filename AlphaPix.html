@@ -370,7 +370,6 @@ function importFromJSON() {
   fetch('fonts/font1.json')
     .then(response => response.json())
     .then(data => {
-      return data;
       data.forEach(block => {
         const exists = libraryBlocks.some(b => b.id === block.id);
         if (!exists) {
