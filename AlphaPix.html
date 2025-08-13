@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AlphaPix</title>
+<style>
+  body {
+    font-family: sans-serif;
+    display: flex;
+    gap: 20px;
+    padding: 20px;
+  }
+  #sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  #library {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .block {
+    width: 8px;
+    height: 100px;
+    border: 1px solid #aaa;
+    cursor: grab;
+    image-rendering: pixelated;
+  }
+  .block.selected {
+    border: 3px solid #ff0000;
+  }
+  .edit-cell {
+    border: 1px solid #999;
+    cursor: crosshair;
+  }
+  #blockEditor {
+    border: 1px solid #ccc;
+    padding: 15px;
+    margin-top: 10px;
+    background: #f5f5f5;
+  }
+  #board {
+    position: relative;
+    background: #f9f9f9;
+    outline: 1px solid #333;
+    display: grid;
+    box-sizing: border-box;
+  }
+  .grid-cell {
+    /* this should be set same as cellsize */
+    width: 15px;
+    height: 15px;
+    border: 0.5px solid #eee;
+    box-sizing: border-box;
+  }
+  .placed-block {
+    position: absolute;
+    width: 80px;
+    height: 100px;
+    image-rendering: pixelated;
+    cursor: move;
+    z-index: 10;
+  }
+  textarea {
+    width: 300px;
+    height: 200px;
+  }
+  label { font-weight: bold; }
+</style>
+</head>
+<body>
+
+<div id="sidebar">
+  <div>
+    <label>Board Size:</label>
+    <input type="number" id="boardHeight" value="32" min="8" max="128"> ×
+    <input type="number" id="boardWidth" value="32" min="8" max="128">
+    <button id="generateBoard">Generate Board</button>
+  </div>
+
+  <label>Library Blocks:</label>
+  <div id="library"></div>
+
+  <label>Block Editor:</label>
+  <button id="newBlock">Create New Block</button>
+  <button id="editBlock">Edit Selected Block</button>
+  <button id="deleteBlock">Delete Selected Block</button>
+  <div id="blockEditor" style="display: none;">
+    <h3>Edit Block: <span id="editingBlockId"></span></h3>
+    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+      <label>Block ID: <input type="text" id="blockId" placeholder="block_name"></label>
+    </div>
+    <div>
+      <label>Height: <input type="number" id="editBlockHeight" value="5" min="1" max="20"></label>
+      <label>Width: <input type="number" id="editBlockWidth" value="3" min="1" max="20"></label>
+      <button id="resizeBlock">Resize Block</button>
+      <p>
+    </div>
+    <div style="display: flex; gap: 20px;">
+      <div id="editCanvas" style="border: 1px solid #333; background: #fff; position: relative;"></div>
+      <div>
+        <label>Tile Type:</label><br>
+        <input type="radio" name="cellType" value="pixel" id="pixelType" checked> Pixel<br>
+        <input type="radio" name="cellType" value="tl" id="quarterType"> Top-Left<br>
+        <input type="radio" name="cellType" value="tr" id="quarterType"> Top-Right<br>
+        <input type="radio" name="cellType" value="bl" id="quarterType"> Bottom-Left<br>
+        <input type="radio" name="cellType" value="br" id="quarterType"> Bottom-Right<br>
+        <br>
+        <label>Color: <input type="color" id="cellColor" value="#cccccc"></label><br><br>
+        <button id="clearCanvas">Clear All</button><br>
+      </div>
+    </div>
+      <div>
+        <br>
+
+        <button id="saveBlockEdit">Save Block</button><br>
+        <button id="cancelEdit">Cancel</button>
+      </div>
+  </div>
+  <label>Save / Load Library:</label>
+  <button id="saveLibrary">Save Library to JSON</button>
+  <button id="loadLibrary">Load Library from JSON</button>
+  <textarea id="libraryJson"></textarea>
+</div>
+
+<div>
+  <div id="board"></div>
+  <br>
+  <div>
+    <label>Tile Type:</label><br>
+    <button id="countTiles">count Tiles</button>
+    <br>
+  </div>
+  <div>
+    <label>Save / Load Board:</label>
+    <br>
+    <button id="saveBoard">Save Board to JSON</button>
+    <button id="loadBoard">Load Board from JSON</button>
+    <br><textarea id="boardJson"></textarea>
+  </div>
+</div>
+
+<script>
+const cellSize = 15;
+const cellSizeEdit = 40;
+const blockSize = { width: 1, height: 1 };
+let boardWidth = 32;
+let boardHeight = 32;
+let draggedData = null;
+
+const boardState = { width: boardWidth, height: boardHeight, blocks: [] };
+const boardContainer = document.getElementById('board');
+const boardJson = document.getElementById('boardJson');
+const libraryJson = document.getElementById('libraryJson');
+const boardInputWidth = document.getElementById('boardWidth');
+const boardInputHeight = document.getElementById('boardHeight');
+const blockInputWidth = document.getElementById('blockWidth');
+const blockInputHeight = document.getElementById('blockHeight');
+
+
+let selectedLibraryBlock = null;
+let editingBlock = null;
+let editCanvas = null;
+
+// --- Utility: Draw a cell ---
+function drawCell(ctx, x, y, cellWidth, cellHeight, shape, color) {
+  ctx.fillStyle = color;
+  if (shape === 'pixel') {
+    ctx.fillRect(x, y, cellWidth, cellHeight);
+  } else {
+    ctx.beginPath();
+    const centerX = x + cellWidth / 2;
+    const centerY = y + cellHeight / 2;
+    const radius = Math.min(cellWidth, cellHeight) / 1;
+    if (shape === 'tl') {
+      // Top-left quarter circle
+      ctx.moveTo(x + radius, y);
+      ctx.arc(x + radius, y + radius, radius, 1.5 * Math.PI, Math.PI, true);
+      ctx.lineTo(x, y + cellHeight);
+      ctx.lineTo(x + cellWidth, y + cellHeight);
+      ctx.lineTo(x + cellWidth, y);
+    } else if (shape === 'tr') {
+      // Top-right quarter circle
+      ctx.moveTo(x + cellWidth - radius, y);
+      ctx.arc(x + cellWidth - radius, y + radius, radius, 1.5 * Math.PI, 0, false);
+      ctx.lineTo(x + cellWidth, y + cellHeight);
+      ctx.lineTo(x, y + cellHeight);
+      ctx.lineTo(x, y);
+    } else if (shape === 'bl') {
+      // Bottom-left quarter circle
+      ctx.moveTo(x, y + cellHeight - radius);
+      ctx.arc(x + radius, y + cellHeight - radius, radius, Math.PI, 0.5 * Math.PI, true);
+      ctx.lineTo(x + cellWidth, y + cellHeight);
+      ctx.lineTo(x + cellWidth, y);
+      ctx.lineTo(x, y);
+    } else if (shape === 'br') {
+      // Bottom-right quarter circle
+      ctx.moveTo(x + cellWidth - radius, y + cellHeight);
+      ctx.arc(x + cellWidth - radius, y + cellHeight - radius, radius, 0.5 * Math.PI, 0, true);
+      ctx.lineTo(x + cellWidth, y);
+      ctx.lineTo(x, y);
+      ctx.lineTo(x, y + cellHeight);
+    }
+    ctx.closePath();
+    ctx.fill();
+  }
+}
+
+// --- Library definition ---
+let libraryBlocks = [
+  {
+    id: 'block1',
+    width: 3,
+    height: 5,
+    cells: Array.from({length: 5}, (_, row) =>
+      Array.from({length: 3}, (_, col) => {
+        // Corners get quarter-circles
+        if (row === 0 && col === 0) return { shape: 'tl', color: '#ff0000'};
+        if (row === 0 && col === 2) return { shape: 'tr', color: '#00ff00'};
+        if (row === 4 && col === 0) return { shape: 'bl', color: '#0000ff'};
+        if (row === 4 && col === 2) return { shape: 'br', color: '#ff00ff'};
+        // Rest are plain pixels
+        return { shape: 'pixel', color: '#cccccc' };
+      })
+    )
+  },
+  {
+    id: 'block2',
+    width: 3,
+    height: 5,
+    cells: Array.from({length: 5}, (_, row) =>
+      Array.from({length: 3}, (_, col) => {
+        if ((row + col) % 2 === 0) {
+          // Alternate quarter-circle orientations
+          const orientations = ['tl', 'tr', 'bl', 'br'];
+          return { shape: orientations[(row + col) % 4] , color: '#ffaa00' };
+        }
+        return { shape: 'pixel', color: '#eeeeee' };
+      })
+    )
+  },
+  {
+    id: 'block3',
+    width: 3,
+    height: 5,
+    cells: Array.from({length: 5}, (_, row) =>
+      Array.from({length: 3}, (_, col) => {
+        // All solid pixels with gradient colors
+        const intensity = (row + col) / (3 + 5);
+        const red = Math.floor(255 * intensity);
+        const blue = Math.floor(255 * (1 - intensity));
+        return { shape: 'pixel', color: `rgb(${red}, 100, ${blue})` };
+      })
+    )
+  }
+];
+
+// --- Render a block to canvas ---
+function renderBlockToCanvas(blockData) {
+  const canvas = document.createElement('canvas');
+  canvas.className = 'block';
+  const displayWidth = blockData.width * cellSize;
+  const displayHeight = blockData.height * cellSize;
+  canvas.style.width = displayWidth + 'px';
+  canvas.style.height = displayHeight + 'px';
+  canvas.width = displayWidth;
+  canvas.height = displayHeight;
+  const ctx = canvas.getContext('2d');
+  
+  const cellWidth = displayWidth / blockData.width;
+  const cellHeight = displayHeight / blockData.height;
+  
+  blockData.cells.forEach((row, y) => {
+    row.forEach((cell, x) => {
+      drawCell(ctx, x * cellWidth, y * cellHeight, cellWidth, cellHeight, cell.shape, cell.color);
+    });
+  });
+  return canvas;
+}
+
+// --- Render Library ---
+function renderLibrary() {
+  const lib = document.getElementById('library');
+  lib.innerHTML = '';
+  libraryBlocks.forEach((block, index) => {
+    const canvas = renderBlockToCanvas(block);
+    canvas.draggable = true;
+    canvas.dataset.blockIndex = index;
+    
+    // Add click selection
+    canvas.addEventListener('click', e => {
+      e.preventDefault();
+      selectLibraryBlock(index, canvas);
+    });
+    
+    canvas.addEventListener('dragstart', e => {
+      const rect = canvas.getBoundingClientRect();
+      draggedData = {
+        source: 'library',
+        blockData: JSON.parse(JSON.stringify(block)),
+        offsetX: e.clientX - rect.left,
+        offsetY: e.clientY - rect.top
+      };
+    });
+    lib.appendChild(canvas);
+  });
+}
+
+function selectLibraryBlock(index, canvas) {
+  // Remove previous selection
+  document.querySelectorAll('.block').forEach(b => b.classList.remove('selected'));
+  // Add selection to clicked block
+  canvas.classList.add('selected');
+  selectedLibraryBlock = index;
+}
+
+renderLibrary();
+
+// --- Generate Board ---
+function generateBoard() {
+  boardWidth = parseInt(boardInputWidth.value);
+  boardHeight = parseInt(boardInputHeight.value);
+  boardState.width = boardWidth;
+  boardState.height = boardHeight;
+  boardState.blocks = [];
+
+  boardContainer.innerHTML = '';
+  boardContainer.style.width = `${boardWidth * cellSize}px`;
+  boardContainer.style.height = `${boardHeight * cellSize}px`;
+  boardContainer.style.gridTemplateColumns = `repeat(${boardWidth}, ${cellSize}px)`;
+  boardContainer.style.gridTemplateRows = `repeat(${boardHeight}, ${cellSize}px)`;
+
+  for (let i = 0; i < boardWidth * boardHeight; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'grid-cell';
+    boardContainer.appendChild(cell);
+  }
+}
+
+document.getElementById('generateBoard').addEventListener('click', generateBoard);
+generateBoard();
+
+// --- Drop logic ---
+boardContainer.addEventListener('dragover', e => e.preventDefault());
+boardContainer.addEventListener('drop', e => {
+  e.preventDefault();
+  if (!draggedData) return;
+  const rect = boardContainer.getBoundingClientRect();
+  const dropX = Math.floor((e.clientX - rect.left - draggedData.offsetX) / cellSize);
+  const dropY = Math.floor((e.clientY - rect.top - draggedData.offsetY) / cellSize);
+  if (
+    dropX < 0 || dropX + blockSize.width > boardWidth ||
+    dropY < 0 || dropY + blockSize.height > boardHeight
+  ) {
+    draggedData = null;
+    return;
+  }
+  if (isOverlapping(dropX, dropY)) {
+    alert('Block overlaps another.');
+    draggedData = null;
+    return;
+  }
+  placeBlock(dropX, dropY, draggedData.blockData);
+  draggedData = null;
+});
+
+function placeBlock(x, y, blockData) {
+  const canvas = renderBlockToCanvas(blockData);
+  canvas.className = 'placed-block';
+  canvas.style.left = `${x * cellSize}px`;
+  canvas.style.top = `${y * cellSize}px`;
+  canvas.draggable = true;
+  canvas.dataset.gridX = x;
+  canvas.dataset.gridY = y;
+  boardContainer.appendChild(canvas);
+
+  boardState.blocks.push({ x, y, cells: blockData.cells });
+
+  canvas.addEventListener('dragstart', e => {
+    const rect = canvas.getBoundingClientRect();
+    draggedData = {
+      source: 'board',
+      blockData: blockData,
+      offsetX: e.clientX - rect.left,
+      offsetY: e.clientY - rect.top
+    };
+    const idx = boardState.blocks.findIndex(b => b.x === x && b.y === y);
+    if (idx >= 0) boardState.blocks.splice(idx, 1);
+    boardContainer.removeChild(canvas);
+  });
+}
+
+function isOverlapping(gridX, gridY) {
+  return boardState.blocks.some(block =>
+    gridX < block.x + blockSize.width &&
+    gridX + blockSize.width > block.x &&
+    gridY < block.y + blockSize.height &&
+    gridY + blockSize.height > block.y
+  );
+}
+
+// --- Save / Load Board ---
+document.getElementById('saveBoard').addEventListener('click', () => {
+  boardJson.value = JSON.stringify(boardState, null, 2);
+});
+
+document.getElementById('loadBoard').addEventListener('click', () => {
+  try {
+    const data = JSON.parse(boardJson.value);
+    boardInputWidth.value = data.width;
+    boardInputHeight.value = data.height;
+    generateBoard();
+    data.blocks.forEach(block => {
+      placeBlock(block.x, block.y, { cells: block.cells });
+    });
+  } catch (e) {
+    alert('Invalid JSON');
+  }
+});
+
+// --- Save / Load Library ---
+document.getElementById('saveLibrary').addEventListener('click', () => {
+  libraryJson.value = JSON.stringify(libraryBlocks, null, 2);
+});
+
+document.getElementById('loadLibrary').addEventListener('click', () => {
+  try {
+    const data = JSON.parse(libraryJson.value);
+    libraryBlocks = data;
+    renderLibrary();
+    selectedLibraryBlock = null;
+  } catch (e) {
+    alert('Invalid Library JSON');
+  }
+});
+
+// --- Block Editor ---
+document.getElementById('newBlock').addEventListener('click', () => {
+  const newWidth = parseInt(document.getElementById('editBlockWidth').value);
+  const newHeight = parseInt(document.getElementById('editBlockHeight').value);
+  editingBlock = {
+    id: `block_${Date.now()}`,
+    width: newWidth,
+    height: newHeight,
+    cells: Array.from({length: newHeight}, () => 
+      Array.from({length: newWidth}, () => ({ shape: 'pixel', color: '#cccccc' }))
+    )
+  };
+  openBlockEditor();
+});
+
+document.getElementById('editBlock').addEventListener('click', () => {
+  if (selectedLibraryBlock === null) {
+    alert('Please select a block to edit first');
+    return;
+  }
+  editingBlock = JSON.parse(JSON.stringify(libraryBlocks[selectedLibraryBlock]));
+  openBlockEditor();
+});
+
+document.getElementById('deleteBlock').addEventListener('click', () => {
+  if (selectedLibraryBlock === null) {
+    alert('Please select a block to delete first');
+    return;
+  }
+  else  {
+    libraryBlocks.splice(selectedLibraryBlock, 1);
+    selectedLibraryBlock = null;
+    renderLibrary();
+  }
+});
+
+document.getElementById('resizeBlock').addEventListener('click', () => {
+  if (!editingBlock) return;
+  const newWidth = parseInt(document.getElementById('editBlockWidth').value);
+  const newHeight = parseInt(document.getElementById('editBlockHeight').value);
+  
+  if (newWidth < 1 || newHeight < 1 || newWidth > 20 || newHeight > 20) {
+    alert('Block size must be between 1x1 and 20x20');
+    return;
+  }
+  
+  // Create new cells array with proper size
+  const newCells = Array.from({length: newHeight}, (_, row) =>
+    Array.from({length: newWidth}, (_, col) => {
+      // Copy existing cell if within bounds, otherwise use default
+      if (row < editingBlock.height && col < editingBlock.width && editingBlock.cells[row] && editingBlock.cells[row][col]) {
+        return editingBlock.cells[row][col];
+      }
+      return { shape: 'pixel', color: '#cccccc' };
+    })
+  );
+  
+  editingBlock.width = newWidth;
+  editingBlock.height = newHeight;
+  editingBlock.cells = newCells;
+  createEditCanvas();
+});
+
+function openBlockEditor() {
+  document.getElementById('blockEditor').style.display = 'block';
+  document.getElementById('editingBlockId').textContent = editingBlock.id;
+  document.getElementById('blockId').value = editingBlock.id;
+  createEditCanvas();
+}
+
+function createEditCanvas() {
+  const container = document.getElementById('editCanvas');
+  container.innerHTML = '';
+  container.style.width = `${editingBlock.width * cellSizeEdit}px`;
+  container.style.height = `${editingBlock.height * cellSizeEdit}px`;
+  container.style.display = 'grid';
+  container.style.gridTemplateColumns = `repeat(${editingBlock.width}, ${cellSizeEdit}px)`;
+  container.style.gridTemplateRows = `repeat(${editingBlock.height}, ${cellSizeEdit}px)`;
+
+  editingBlock.cells.forEach((row, y) => {
+    row.forEach((cell, x) => {
+      const cellDiv = document.createElement('div');
+      cellDiv.className = 'edit-cell';
+      cellDiv.style.width = `${cellSizeEdit}px`;
+      cellDiv.style.height = `${cellSizeEdit}px`;
+      cellDiv.dataset.x = x;
+      cellDiv.dataset.y = y;
+      
+      // Create canvas for rendering
+      const canvas = document.createElement('canvas');
+      canvas.width = cellSizeEdit;
+      canvas.height = cellSizeEdit;
+      canvas.style.width = '100%';
+      canvas.style.height = '100%';
+      canvas.style.pointerEvents = 'none';
+      
+      const ctx = canvas.getContext('2d');
+      drawCell(ctx, 0, 0, cellSizeEdit, cellSizeEdit, cell.shape, cell.color);
+      
+      cellDiv.appendChild(canvas);
+      cellDiv.addEventListener('click', () => editCell(x, y));
+      container.appendChild(cellDiv);
+    });
+  });
+}
+
+function editCell(x, y) {
+  const cellType = document.querySelector('input[name="cellType"]:checked').value;
+  const color = document.getElementById('cellColor').value;
+  
+  editingBlock.cells[y][x] = {
+    shape: cellType,
+    color: color
+  };
+  
+  createEditCanvas(); // Refresh the edit canvas
+}
+
+document.getElementById('clearCanvas').addEventListener('click', () => {
+  const newColor = document.getElementById('cellColor').value;
+  editingBlock.cells = Array.from({length: editingBlock.height}, () => 
+    Array.from({length: editingBlock.width}, () => ({ shape: 'pixel', color: newColor }))
+  );
+  createEditCanvas();
+});
+
+document.getElementById('saveBlockEdit').addEventListener('click', () => {
+  const newId = document.getElementById('blockId').value.trim();
+  if (!newId) {
+    alert('Please enter a block ID');
+    return;
+  }
+  
+  editingBlock.id = newId;
+  
+  if (selectedLibraryBlock !== null) {
+    // Editing existing block
+    libraryBlocks[selectedLibraryBlock] = editingBlock;
+  } else {
+    // Adding new block
+    libraryBlocks.push(editingBlock);
+  }
+  
+  renderLibrary();
+  closeBlockEditor();
+});
+
+document.getElementById('cancelEdit').addEventListener('click', closeBlockEditor);
+
+function closeBlockEditor() {
+  document.getElementById('blockEditor').style.display = 'none';
+  editingBlock = null;
+  selectedLibraryBlock = null;
+}
+
+//countTiles ---
+document.getElementById('countTiles').addEventListener('click', () => {
+  // boardJson.value = Array.from(countUniqueShapeColor(boardState)).join('\n');
+  boardJson.value = JSON.stringify(countUniqueShapeColor(boardState));
+  console.log(countUniqueShapeColor(boardState));
+});
+
+function countUniqueShapeColor(data) {
+  // const uniqueSet = new Set();
+  const counts = {}
+
+  for (const block of data.blocks) {
+    for (const row of block.cells) {
+      for (const cell of row) {
+        if (['tl','tr','bl','br'].includes(cell.shape)) {
+          tile = 'Quarter'
+        } else {
+          tile = cell.shape
+        }
+        // Create a unique key for shape + color
+        const key = `${tile}|${cell.color}`;
+        // uniqueSet.add(key);
+        counts[key] = (counts[key] || 0) + 1;
+      }
+    }
+  }
+
+  return counts;
+}
+
+</script>
+
+</body>
+</html>
