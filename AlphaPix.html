@@ -33,10 +33,9 @@
   }
   #library-textbox {
     width: 200px;
-    height: 400px;
-    overflow-y: auto;
+    height: 30px;
     border: 1px solid #ccc;
-    padding: 10px;
+    padding: 5px;
   }
   .library-item {
     display: flex;
@@ -83,6 +82,33 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    padding: 10px;
+    background: #fafafa;
+  }
+  #library-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  #font-selector {
+    width: 100%;
+    padding: 5px;
+  }
+  #filter-input {
+    flex: 1;
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+  }
+  #filter-type {
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    min-width: 80px;
   }
   .block {
     border: 1px solid #aaa;
@@ -91,6 +117,9 @@
   }
   .block.selected {
     border: 3px solid #ff0000;
+  }
+  .block.hidden {
+    display: none;
   }
   .edit-cell {
     border: 1px solid #999;
@@ -108,6 +137,7 @@
     outline: 1px solid #333;
     display: grid;
     box-sizing: border-box;
+    cursor: crosshair;
   }
   .grid-cell {
     width: 15px;
@@ -126,74 +156,32 @@
     height: 200px;
   }
   label { font-weight: bold; }
-  #main-area {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    flex: 1;
-  }
-  #canvas-section {
-    display: flex;
-    gap: 20px;
-  }
-  #board-container {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  #library-textbox {
-    width: 200px;
-    height: 400px;
-    overflow-y: auto;
-    border: 1px solid #ccc;
-    padding: 10px;
-  }
-  .library-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 5px;
-    cursor: pointer;
-    border: 1px solid transparent;
-    margin-bottom: 5px;
-  }
-  .library-item:hover {
-    background: #f0f0f0;
-  }
-  .library-item canvas {
-    border: 1px solid #999;
-  }
-  #canvas-editor {
-    border: 1px solid #ccc;
-    padding: 15px;
-    background: #f5f5f5;
-  }
-  #canvas-editor-grid {
-    border: 2px solid #333;
-    background: #fff;
-    cursor: crosshair;
-  }
-  #tile-counts {
-    border: 1px solid #ccc;
-    padding: 10px;
-    background: #f9f9f9;
-  }
-  .count-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 5px;
-  }
-  .count-color {
-    width: 20px;
-    height: 20px;
-    border: 1px solid #333;
+  .loading {
+    color: #666;
+    font-style: italic;
   }
 </style>
 </head>
 <body>
 
 <div id="sidebar">
+  <div id="library-controls">
+    <label>Font Selection:</label>
+    <select id="font-selector">
+      <option value="">Loading fonts...</option>
+    </select>
+    
+    <label>Filter Blocks:</label>
+    <div style="display: flex; gap: 5px; align-items: center;">
+      <select id="filter-type">
+        <option value="id">ID</option>
+        <option value="width">Width</option>
+        <option value="height">Height</option>
+      </select>
+      <input type="text" id="filter-input" placeholder="Type to filter blocks...">
+    </div>
+  </div>
+
   <label>Library Blocks:</label>
   <div id="library"></div>
 
@@ -233,8 +221,8 @@
   </div>
   
   <label>Save / Load Library:</label>
-  <button id="saveLibrary">Save Library to JSON</button>
-  <button id="loadLibrary">Load Library from JSON</button>
+  <button id="saveLibrary">Export to JSON</button>
+  <button id="loadLibrary">Import from JSON</button>
   <textarea id="libraryJson"></textarea>
 </div>
 
@@ -243,21 +231,22 @@
     <div id="board-container">
       <div id="board"></div>
     </div>
-    <div>
-      <label>Library Items:</label>
-      <textarea id="library-textbox"></textarea>
-    </div>
   </div>
   
   <div>
-    <label>Board Size:</label>
+    
+    <label>Board Size :</label>
     <input type="number" id="boardHeight" value="2" min="8" max="128"> ×
     <input type="number" id="boardWidth" value="2" min="8" max="128">
     <button id="generateBoard">Resize</button>
+    <div>
+      <label>Add Letters:</label>
+      <input type="text" id="library-textbox" placeholder="Type letters here...">
+    </div>
   </div>
 
-  <div id="canvas-editor">
-    <h3>Canvas Editor</h3>
+  <div>
+    <label>Canvas Editor Tools:</label><br>
     <div style="display: flex; gap: 20px; margin-bottom: 10px;">
       <div>
         <label>Tile Type:</label><br>
@@ -272,7 +261,6 @@
         <button id="clearMainCanvas">Clear Main Canvas</button>
       </div>
     </div>
-    <div id="canvas-editor-grid"></div>
   </div>
   
   <div id="tile-counts">
@@ -295,26 +283,9 @@ const blockSize = { width: 1, height: 1 };
 let boardWidth = 32;
 let boardHeight = 32;
 let draggedData = null;
-let canvasGrid = [];
-// let libraryBlocks = [];
-let libraryBlocks = [
-  {
-    id: 'block1',
-    width: 3,
-    height: 5,
-    cells: Array.from({length: 5}, (_, row) =>
-      Array.from({length: 3}, (_, col) => {
-        // Corners get quarter-circles
-        if (row === 0 && col === 0) return { shape: 'tl', color: '#ff0000'};
-        if (row === 0 && col === 2) return { shape: 'tr', color: '#00ff00'};
-        if (row === 4 && col === 0) return { shape: 'bl', color: '#0000ff'};
-        if (row === 4 && col === 2) return { shape: 'br', color: '#ff00ff'};
-        // Rest are plain pixels
-        return { shape: 'pixel', color: '#cccccc' };
-      })
-    )
-  }
-];
+let libraryBlocks = [];
+let availableFonts = [];
+let currentFont = '';
 
 const boardState = { width: boardWidth, height: boardHeight, blocks: [], canvas: [] };
 const boardContainer = document.getElementById('board');
@@ -322,10 +293,149 @@ const boardJson = document.getElementById('boardJson');
 const libraryJson = document.getElementById('libraryJson');
 const boardInputWidth = document.getElementById('boardWidth');
 const boardInputHeight = document.getElementById('boardHeight');
+const fontSelector = document.getElementById('font-selector');
+const filterInput = document.getElementById('filter-input');
+const filterType = document.getElementById('filter-type');
 
 let selectedLibraryBlock = null;
 let editingBlock = null;
 let editCanvas = null;
+
+// --- Font Management ---
+async function loadAvailableFonts() {
+  try {
+    // Try to fetch a directory listing or use a predefined list
+    // Since we can't directly list directory contents, we'll try common font files
+    const possibleFonts = ['04.json','06.json','07+ShadowDown.json','07.json','08.json','10+2xShadownLeft.json'];
+    availableFonts = [];
+    
+    for (const font of possibleFonts) {
+      try {
+        const response = await fetch(`fonts/${font}`);
+        if (response.ok) {
+          availableFonts.push(font);
+        }
+      } catch (e) {
+        // Font file doesn't exist, skip
+      }
+    }
+    
+    // Populate font selector
+    fontSelector.innerHTML = '';
+    if (availableFonts.length === 0) {
+      fontSelector.innerHTML = '<option value="">No fonts found</option>';
+    } else {
+      fontSelector.innerHTML = '<option value="">Select a font...</option>';
+      availableFonts.forEach(font => {
+        const option = document.createElement('option');
+        option.value = font;
+        option.textContent = font.replace('.json', '');
+        fontSelector.appendChild(option);
+      });
+      
+      // Load first font by default if available
+      if (availableFonts.length > 0) {
+        fontSelector.value = availableFonts[0];
+        currentFont = availableFonts[0];
+        await loadFontFromFile(currentFont);
+      }
+    }
+  } catch (error) {
+    console.error('Error loading fonts:', error);
+    fontSelector.innerHTML = '<option value="">Error loading fonts</option>';
+  }
+}
+
+async function loadFontFromFile(fontFile) {
+  if (!fontFile) return;
+  
+  try {
+    const response = await fetch(`fonts/${fontFile}`);
+    if (!response.ok) throw new Error('Font file not found');
+    
+    const fontData = await response.json();
+    
+    // Clear existing blocks and add new ones
+    libraryBlocks = [];
+    fontData.forEach(block => {
+      const exists = libraryBlocks.some(b => b.id === block.id);
+      if (!exists) {
+        libraryBlocks.push(block);
+      }
+    });
+    
+    renderLibrary();
+    currentFont = fontFile;
+  } catch (error) {
+    console.error('Error loading font:', error);
+    alert(`Error loading font: ${fontFile}`);
+  }
+}
+
+// Font selector event
+fontSelector.addEventListener('change', async (e) => {
+  if (e.target.value) {
+    await loadFontFromFile(e.target.value);
+  }
+});
+
+// --- Filter functionality ---
+function filterLibraryBlocks() {
+  const filterText = filterInput.value.toLowerCase().trim();
+  const filterBy = filterType.value;
+  const libraryDiv = document.getElementById('library');
+  const blocks = libraryDiv.querySelectorAll('.block');
+  
+  blocks.forEach((block, index) => {
+    const blockData = libraryBlocks[index];
+    if (!blockData) return;
+    
+    let shouldShow = false;
+    
+    if (filterText === '') {
+      shouldShow = true;
+    } else {
+      switch (filterBy) {
+        case 'id':
+          shouldShow = blockData.id.toLowerCase().includes(filterText);
+          break;
+        case 'width':
+          shouldShow = blockData.width.toString().includes(filterText);
+          break;
+        case 'height':
+          shouldShow = blockData.height.toString().includes(filterText);
+          break;
+        default:
+          shouldShow = blockData.id.toLowerCase().includes(filterText);
+      }
+    }
+    
+    if (shouldShow) {
+      block.classList.remove('hidden');
+    } else {
+      block.classList.add('hidden');
+    }
+  });
+}
+
+// Filter input and dropdown events
+filterInput.addEventListener('input', filterLibraryBlocks);
+filterType.addEventListener('change', () => {
+  // Update placeholder text based on selected filter type
+  const filterBy = filterType.value;
+  switch (filterBy) {
+    case 'id':
+      filterInput.placeholder = 'Filter by ID...';
+      break;
+    case 'width':
+      filterInput.placeholder = 'Filter by width (e.g., 3)...';
+      break;
+    case 'height':
+      filterInput.placeholder = 'Filter by height (e.g., 5)...';
+      break;
+  }
+  filterLibraryBlocks(); // Re-filter with new criteria
+});
 
 // --- Utility: Draw a cell ---
 function drawCell(ctx, x, y, cellWidth, cellHeight, shape, color) {
@@ -365,22 +475,9 @@ function drawCell(ctx, x, y, cellWidth, cellHeight, shape, color) {
   }
 }
 
-// --- Library definition ---
+// --- Legacy import function (kept for compatibility) ---
 function importFromJSON() {
-  fetch('fonts/font1.json')
-    .then(response => response.json())
-    .then(data => {
-      data.forEach(block => {
-        const exists = libraryBlocks.some(b => b.id === block.id);
-        if (!exists) {
-          libraryBlocks.push(block);
-        }
-      });
-
-      // Render library after import
-      renderLibrary();
-    })
-    .catch(error => console.error('Error loading JSON:', error));
+  // This is now handled by the font loading system
 }
 
 // --- Render a block to canvas ---
@@ -414,6 +511,7 @@ function renderLibrary() {
     const canvas = renderBlockToCanvas(block);
     canvas.draggable = true;
     canvas.dataset.blockIndex = index;
+    canvas.title = `Block: ${block.id}`; // Add tooltip
     
     canvas.addEventListener('click', e => {
       e.preventDefault();
@@ -431,6 +529,9 @@ function renderLibrary() {
     });
     lib.appendChild(canvas);
   });
+  
+  // Apply current filter
+  filterLibraryBlocks();
 }
 
 // Trigger on any text input
@@ -443,7 +544,7 @@ textbox.addEventListener('input', function () {
     libraryBlocks.forEach((block, index) => {
       if (input == block.id) {
         addBlockToMainCanvas(block);
-        console.log(block.id);
+        // console.log(block.id);
       }
     });
   }
@@ -472,9 +573,8 @@ function addBlockToMainCanvas(blockData) {
   }
 }
 
-
-importFromJSON();
-renderLibrary();
+// Initialize fonts on load
+loadAvailableFonts();
 
 // --- Generate Board ---
 function generateBoard() {
@@ -484,11 +584,10 @@ function generateBoard() {
   boardState.height = boardHeight;
   boardState.blocks = [];
   
-  // Initialize canvas grid
-  canvasGrid = Array.from({length: boardHeight}, () => 
+  // Initialize canvas - only use boardState.canvas
+  boardState.canvas = Array.from({length: boardHeight}, () => 
     Array.from({length: boardWidth}, () => ({ shape: 'pixel', color: '#ffffff' }))
   );
-  boardState.canvas = canvasGrid;
 
   boardContainer.innerHTML = '';
   boardContainer.style.width = `${boardWidth * cellSize}px`;
@@ -499,45 +598,45 @@ function generateBoard() {
   for (let i = 0; i < boardWidth * boardHeight; i++) {
     const cell = document.createElement('div');
     cell.className = 'grid-cell';
+    
+    // Add click handler for direct editing
+    const row = Math.floor(i / boardWidth);
+    const col = i % boardWidth;
+    cell.addEventListener('click', () => editCanvasCell(col, row));
+    
     boardContainer.appendChild(cell);
   }
   
-  createCanvasEditor();
+  updateBoardVisuals();
   updateTileCount();
 }
 
-// --- Canvas Editor ---
-function createCanvasEditor() {
-  const container = document.getElementById('canvas-editor-grid');
-  container.innerHTML = '';
-  container.style.width = `${boardWidth * cellSize}px`;
-  container.style.height = `${boardHeight * cellSize}px`;
-  container.style.display = 'grid';
-  container.style.gridTemplateColumns = `repeat(${boardWidth}, ${cellSize}px)`;
-  container.style.gridTemplateRows = `repeat(${boardHeight}, ${cellSize}px)`;
-
-  canvasGrid.forEach((row, y) => {
+// --- Canvas Editor Functions ---
+function updateBoardVisuals() {
+  // Update the visual representation of the board based on boardState.canvas
+  const cells = boardContainer.querySelectorAll('.grid-cell');
+  
+  boardState.canvas.forEach((row, y) => {
     row.forEach((cell, x) => {
-      const cellDiv = document.createElement('div');
-      cellDiv.className = 'edit-cell';
-      cellDiv.style.width = `${cellSize}px`;
-      cellDiv.style.height = `${cellSize}px`;
-      cellDiv.dataset.x = x;
-      cellDiv.dataset.y = y;
-      
-      const canvas = document.createElement('canvas');
-      canvas.width = cellSize;
-      canvas.height = cellSize;
-      canvas.style.width = '100%';
-      canvas.style.height = '100%';
-      canvas.style.pointerEvents = 'none';
-      
-      const ctx = canvas.getContext('2d');
-      drawCell(ctx, 0, 0, cellSize, cellSize, cell.shape, cell.color);
-      
-      cellDiv.appendChild(canvas);
-      cellDiv.addEventListener('click', () => editCanvasCell(x, y));
-      container.appendChild(cellDiv);
+      const index = y * boardWidth + x;
+      const cellDiv = cells[index];
+      if (cellDiv) {
+        // Create or update canvas for this cell
+        let canvas = cellDiv.querySelector('canvas');
+        if (!canvas) {
+          canvas = document.createElement('canvas');
+          canvas.width = cellSize;
+          canvas.height = cellSize;
+          canvas.style.width = '100%';
+          canvas.style.height = '100%';
+          canvas.style.pointerEvents = 'none';
+          cellDiv.appendChild(canvas);
+        }
+        
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, cellSize, cellSize);
+        drawCell(ctx, 0, 0, cellSize, cellSize, cell.shape, cell.color);
+      }
     });
   });
 }
@@ -593,28 +692,31 @@ function editCanvasCell(x, y) {
   const cellType = document.querySelector('input[name="canvasCellType"]:checked').value;
   const color = document.getElementById('canvasCellColor').value;
   
-  canvasGrid[y][x] = {
+  // Update only boardState.canvas - single source of truth
+  boardState.canvas[y][x] = {
     shape: cellType,
     color: color
   };
-  boardState.canvas = canvasGrid;
   
-  createCanvasEditor();
+  console.log(`Updated cell at (${x}, ${y}) with:`, boardState.canvas[y][x]);
+  
+  updateBoardVisuals();
   updateTileCount();
 }
 
 document.getElementById('clearMainCanvas').addEventListener('click', () => {
   const color = document.getElementById('canvasCellColor').value;
-  canvasGrid = Array.from({length: boardHeight}, () => 
+  
+  // Reset only boardState.canvas
+  boardState.canvas = Array.from({length: boardHeight}, () => 
     Array.from({length: boardWidth}, () => ({ shape: 'pixel', color: color }))
   );
-  boardState.canvas = canvasGrid;
   boardState.blocks = [];
   
   // Clear placed blocks from visual board
   document.querySelectorAll('.placed-block').forEach(block => block.remove());
   
-  createCanvasEditor();
+  updateBoardVisuals();
   updateTileCount();
 });
 
@@ -685,9 +787,19 @@ function isOverlapping(gridX, gridY, blockData) {
 
 // --- Tile Count Function ---
 function updateTileCount() {
+  console.log('Updating tile count...'); // Debug log
+  console.log('boardState:', boardState); // Debug log
+  
   const counts = countUniqueShapeColor(boardState);
   const display = document.getElementById('count-display');
   display.innerHTML = '';
+  
+  console.log('Tile counts:', counts); // Debug log
+  
+  if (Object.keys(counts).length === 0) {
+    display.innerHTML = '<div>No tiles to count</div>';
+    return;
+  }
   
   Object.entries(counts).forEach(([key, count]) => {
     const [shape, color] = key.split('|');
@@ -709,29 +821,54 @@ function updateTileCount() {
 
 function countUniqueShapeColor(data) {
   const counts = {};
+  
+  console.log('Counting tiles in data:', data);
 
-  // Count canvas cells
-  for (const row of data.canvas) {
-    for (const cell of row) {
-      if (cell.color !== '#ffffff') { // Skip white background cells
-        let tile = ['tl','tr','bl','br'].includes(cell.shape) ? 'Quarter' : cell.shape;
-        const key = `${tile}|${cell.color}`;
-        counts[key] = (counts[key] || 0) + 1;
+  // Count canvas cells (background/painted cells)
+  if (data.canvas && Array.isArray(data.canvas)) {
+    console.log('Processing canvas with', data.canvas.length, 'rows');
+    for (let y = 0; y < data.canvas.length; y++) {
+      const row = data.canvas[y];
+      if (Array.isArray(row)) {
+        for (let x = 0; x < row.length; x++) {
+          const cell = row[x];
+          if (cell && cell.color && cell.color !== '#ffffff') { // Skip white background cells
+            let tile = ['tl','tr','bl','br'].includes(cell.shape) ? 'Quarter' : cell.shape;
+            const key = `${tile}|${cell.color}`;
+            counts[key] = (counts[key] || 0) + 1;
+            console.log(`Canvas cell at (${x},${y}): ${tile}, ${cell.color}`);
+          }
+        }
       }
     }
+  } else {
+    console.log('No canvas data found or not an array');
   }
 
   // Count block cells
-  for (const block of data.blocks) {
-    for (const row of block.cells) {
-      for (const cell of row) {
-        let tile = ['tl','tr','bl','br'].includes(cell.shape) ? 'Quarter' : cell.shape;
-        const key = `${tile}|${cell.color}`;
-        counts[key] = (counts[key] || 0) + 1;
+  if (data.blocks && Array.isArray(data.blocks)) {
+    console.log('Processing', data.blocks.length, 'blocks');
+    for (const block of data.blocks) {
+      if (block.cells && Array.isArray(block.cells)) {
+        for (const row of block.cells) {
+          if (Array.isArray(row)) {
+            for (const cell of row) {
+              if (cell && cell.color && cell.shape) {
+                let tile = ['tl','tr','bl','br'].includes(cell.shape) ? 'Quarter' : cell.shape;
+                const key = `${tile}|${cell.color}`;
+                counts[key] = (counts[key] || 0) + 1;
+                console.log(`Block cell: ${tile}, ${cell.color}`);
+              }
+            }
+          }
+        }
       }
     }
+  } else {
+    console.log('No block data found or not an array');
   }
 
+  console.log('Final counts:', counts);
   return counts;
 }
 
@@ -743,11 +880,11 @@ document.getElementById('saveBoard').addEventListener('click', () => {
 document.getElementById('loadBoard').addEventListener('click', () => {
   try {
     const data = JSON.parse(boardJson.value);
-    boardInputWidth.value = data.width;
-    boardInputHeight.value = data.height;
+    boardInputWidth.value = data.width / 16;
+    boardInputHeight.value = data.height / 16;
     
     if (data.canvas) {
-      canvasGrid = data.canvas;
+      boardState.canvas = data.canvas; // Direct assignment since we only have one source
     }
     
     generateBoard();
@@ -761,6 +898,7 @@ document.getElementById('loadBoard').addEventListener('click', () => {
         });
       });
     }
+    updateBoardVisuals();
     updateTileCount();
   } catch (e) {
     alert('Invalid JSON');
@@ -935,29 +1073,6 @@ function closeBlockEditor() {
   document.getElementById('blockEditor').style.display = 'none';
   editingBlock = null;
   selectedLibraryBlock = null;
-}
-
-function countUniqueShapeColor(data) {
-  // const uniqueSet = new Set();
-  const counts = {}
-
-  for (const block of data.blocks) {
-    for (const row of block.cells) {
-      for (const cell of row) {
-        if (['tl','tr','bl','br'].includes(cell.shape)) {
-          tile = 'Quarter'
-        } else {
-          tile = cell.shape
-        }
-        // Create a unique key for shape + color
-        const key = `${tile}|${cell.color}`;
-        // uniqueSet.add(key);
-        counts[key] = (counts[key] || 0) + 1;
-      }
-    }
-  }
-
-  return counts;
 }
 
 </script>
