@@ -165,7 +165,7 @@
   {
     "id": "B",
     "width": 6,
-    "height": 8,
+    "height": 6,
     "cells": [
       [
         {
@@ -186,32 +186,6 @@
         },
         {
           "shape": "tr",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#cccccc"
-        }
-      ],
-      [
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
           "color": "#ff0000"
         },
         {
@@ -309,32 +283,6 @@
         {
           "shape": "pixel",
           "color": "#cccccc"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#cccccc"
-        }
-      ],
-      [
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
         },
         {
           "shape": "pixel",
@@ -543,7 +491,7 @@
   {
     "id": "D",
     "width": 6,
-    "height": 8,
+    "height": 6,
     "cells": [
       [
         {
@@ -583,58 +531,6 @@
         {
           "shape": "pixel",
           "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#cccccc"
-        }
-      ],
-      [
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#cccccc"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#cccccc"
-        }
-      ],
-      [
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#cccccc"
         },
         {
           "shape": "pixel",
@@ -758,7 +654,7 @@
   {
     "id": "E",
     "width": 5,
-    "height": 8,
+    "height": 6,
     "cells": [
       [
         {
@@ -793,28 +689,6 @@
         },
         {
           "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#cccccc"
-        }
-      ],
-      [
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
           "color": "#cccccc"
         },
         {
@@ -841,29 +715,7 @@
         },
         {
           "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
           "color": "#cccccc"
-        }
-      ],
-      [
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
         },
         {
           "shape": "pixel",
@@ -941,7 +793,7 @@
   {
     "id": "F",
     "width": 5,
-    "height": 8,
+    "height": 6,
     "cells": [
       [
         {
@@ -1024,50 +876,6 @@
         },
         {
           "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#cccccc"
-        }
-      ],
-      [
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#cccccc"
-        }
-      ],
-      [
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#cccccc"
-        },
-        {
-          "shape": "pixel",
           "color": "#cccccc"
         },
         {
@@ -1124,7 +932,7 @@
   {
     "id": "G",
     "width": 6,
-    "height": 8,
+    "height": 6,
     "cells": [
       [
         {
@@ -1193,32 +1001,6 @@
         },
         {
           "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#cccccc"
-        }
-      ],
-      [
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#cccccc"
-        },
-        {
-          "shape": "pixel",
           "color": "#cccccc"
         },
         {
@@ -1240,7 +1022,7 @@
           "color": "#ff0000"
         },
         {
-          "shape": "pixel",
+          "shape": "bl",
           "color": "#ff0000"
         },
         {
@@ -1266,33 +1048,7 @@
           "color": "#ff0000"
         },
         {
-          "shape": "pixel",
-          "color": "#cccccc"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#cccccc"
-        }
-      ],
-      [
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
+          "shape": "tr",
           "color": "#ff0000"
         },
         {
@@ -1502,36 +1258,8 @@
   {
     "id": "I",
     "width": 3,
-    "height": 8,
+    "height": 6,
     "cells": [
-      [
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#cccccc"
-        }
-      ],
-      [
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#cccccc"
-        }
-      ],
       [
         {
           "shape": "pixel",
@@ -1621,60 +1349,8 @@
   {
     "id": "J",
     "width": 6,
-    "height": 8,
+    "height": 6,
     "cells": [
-      [
-        {
-          "shape": "pixel",
-          "color": "#cccccc"
-        },
-        {
-          "shape": "pixel",
-          "color": "#cccccc"
-        },
-        {
-          "shape": "pixel",
-          "color": "#cccccc"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#cccccc"
-        }
-      ],
-      [
-        {
-          "shape": "pixel",
-          "color": "#cccccc"
-        },
-        {
-          "shape": "pixel",
-          "color": "#cccccc"
-        },
-        {
-          "shape": "pixel",
-          "color": "#cccccc"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#cccccc"
-        }
-      ],
       [
         {
           "shape": "pixel",
@@ -1836,34 +1512,8 @@
   {
     "id": "K",
     "width": 6,
-    "height": 8,
+    "height": 6,
     "cells": [
-      [
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#cccccc"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#cccccc"
-        }
-      ],
       [
         {
           "shape": "pixel",
@@ -1961,32 +1611,6 @@
         },
         {
           "shape": "tr",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#cccccc"
-        }
-      ],
-      [
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#cccccc"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
           "color": "#ff0000"
         },
         {
@@ -2727,7 +2351,7 @@
   {
     "id": "P",
     "width": 6,
-    "height": 8,
+    "height": 6,
     "cells": [
       [
         {
@@ -2884,65 +2508,13 @@
           "shape": "pixel",
           "color": "#cccccc"
         }
-      ],
-      [
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#cccccc"
-        },
-        {
-          "shape": "pixel",
-          "color": "#cccccc"
-        },
-        {
-          "shape": "pixel",
-          "color": "#cccccc"
-        },
-        {
-          "shape": "pixel",
-          "color": "#cccccc"
-        }
-      ],
-      [
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#cccccc"
-        },
-        {
-          "shape": "pixel",
-          "color": "#cccccc"
-        },
-        {
-          "shape": "pixel",
-          "color": "#cccccc"
-        },
-        {
-          "shape": "pixel",
-          "color": "#cccccc"
-        }
       ]
     ]
   },
   {
     "id": "Q",
     "width": 6,
-    "height": 8,
+    "height": 6,
     "cells": [
       [
         {
@@ -3034,58 +2606,6 @@
         {
           "shape": "pixel",
           "color": "#cccccc"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#cccccc"
-        }
-      ],
-      [
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#cccccc"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#cccccc"
-        }
-      ],
-      [
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
         },
         {
           "shape": "pixel",
@@ -3157,7 +2677,7 @@
   {
     "id": "R",
     "width": 6,
-    "height": 8,
+    "height": 6,
     "cells": [
       [
         {
@@ -3178,32 +2698,6 @@
         },
         {
           "shape": "tr",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#cccccc"
-        }
-      ],
-      [
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
           "color": "#ff0000"
         },
         {
@@ -3340,39 +2834,13 @@
           "shape": "pixel",
           "color": "#cccccc"
         }
-      ],
-      [
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#cccccc"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#cccccc"
-        }
       ]
     ]
   },
   {
     "id": "S",
     "width": 6,
-    "height": 8,
+    "height": 6,
     "cells": [
       [
         {
@@ -3414,38 +2882,12 @@
           "color": "#cccccc"
         },
         {
-          "shape": "pixel",
+          "shape": "bl",
           "color": "#ff0000"
         },
         {
           "shape": "pixel",
           "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#cccccc"
-        }
-      ],
-      [
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#cccccc"
-        },
-        {
-          "shape": "pixel",
-          "color": "#cccccc"
-        },
-        {
-          "shape": "pixel",
-          "color": "#cccccc"
         },
         {
           "shape": "pixel",
@@ -3507,36 +2949,10 @@
       [
         {
           "shape": "pixel",
-          "color": "#cccccc"
-        },
-        {
-          "shape": "pixel",
-          "color": "#cccccc"
-        },
-        {
-          "shape": "pixel",
-          "color": "#cccccc"
-        },
-        {
-          "shape": "pixel",
           "color": "#ff0000"
         },
         {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#cccccc"
-        }
-      ],
-      [
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
+          "shape": "tr",
           "color": "#ff0000"
         },
         {
@@ -4402,34 +3818,8 @@
   {
     "id": "Y",
     "width": 6,
-    "height": 8,
+    "height": 6,
     "cells": [
-      [
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#cccccc"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#cccccc"
-        }
-      ],
       [
         {
           "shape": "pixel",
@@ -4528,32 +3918,6 @@
         {
           "shape": "br",
           "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#cccccc"
-        }
-      ],
-      [
-        {
-          "shape": "pixel",
-          "color": "#cccccc"
-        },
-        {
-          "shape": "pixel",
-          "color": "#cccccc"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#cccccc"
         },
         {
           "shape": "pixel",

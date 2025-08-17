@@ -239,6 +239,7 @@
     <input type="number" id="boardHeight" value="2" min="8" max="128"> ×
     <input type="number" id="boardWidth" value="2" min="8" max="128">
     <button id="generateBoard">Resize</button>
+    <button id="clearMainCanvas">Fill Main Canvas</button>
     <div>
       <label>Add Letters:</label>
       <input type="text" id="library-textbox" placeholder="Type letters here...">
@@ -258,7 +259,6 @@
       </div>
       <div>
         <label>Color: <input type="color" id="canvasCellColor" value="#cccccc"></label><br>
-        <button id="clearMainCanvas">Clear Main Canvas</button>
       </div>
     </div>
   </div>
@@ -306,7 +306,7 @@ async function loadAvailableFonts() {
   try {
     // Try to fetch a directory listing or use a predefined list
     // Since we can't directly list directory contents, we'll try common font files
-    const possibleFonts = ['04.json','06.json','07+ShadowDown.json','07.json','08.json','10+2xShadownLeft.json'];
+    const possibleFonts = ['06.json','04.json','07+ShadowDown.json','07.json','08.json','10+2xShadownLeft.json'];
     availableFonts = [];
     
     for (const font of possibleFonts) {
