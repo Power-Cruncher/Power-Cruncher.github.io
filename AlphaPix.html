@@ -199,23 +199,23 @@
       <label>Width: <input type="number" id="editBlockWidth" value="3" min="1" max="20"></label>
       <button id="resizeBlock">Resize Block</button>
     </div>
+    <div>
+      <label>Tile Type:</label><br>
+      <input type="radio" name="cellType" value="pixel" id="pixelType" checked> Pixel<br>
+      <input type="radio" name="cellType" value="tl" id="quarterType1"> Top-Left<br>
+      <input type="radio" name="cellType" value="tr" id="quarterType2"> Top-Right<br>
+      <input type="radio" name="cellType" value="bl" id="quarterType3"> Bottom-Left<br>
+      <input type="radio" name="cellType" value="br" id="quarterType4"> Bottom-Right<br>
+      <br>
+      <label>Color: <input type="color" id="cellColor" value="#cccccc"></label><br><br>
+    </div>
     <div style="display: flex; gap: 20px;">
       <div id="editCanvas" style="border: 1px solid #333; background: #fff; position: relative;"></div>
-      <div>
-        <label>Tile Type:</label><br>
-        <input type="radio" name="cellType" value="pixel" id="pixelType" checked> Pixel<br>
-        <input type="radio" name="cellType" value="tl" id="quarterType1"> Top-Left<br>
-        <input type="radio" name="cellType" value="tr" id="quarterType2"> Top-Right<br>
-        <input type="radio" name="cellType" value="bl" id="quarterType3"> Bottom-Left<br>
-        <input type="radio" name="cellType" value="br" id="quarterType4"> Bottom-Right<br>
-        <br>
-        <label>Color: <input type="color" id="cellColor" value="#cccccc"></label><br><br>
-        <button id="clearCanvas">Clear All</button><br>
-      </div>
     </div>
     <div>
       <br>
-      <button id="saveBlockEdit">Save Block</button><br>
+      <button id="clearCanvas">Clear All</button><br>
+      <button id="saveBlockEdit">Save Block</button>
       <button id="cancelEdit">Cancel</button>
     </div>
   </div>
