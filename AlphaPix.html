@@ -4,175 +4,326 @@
 <meta charset="UTF-8">
 <title>AlphaPix</title>
 <style>
+  :root {
+    --cell-size: 15px;
+    --edit-cell-size: 40px;
+    --border-light: #ddd;
+    --border-medium: #999;
+    --border-dark: #333;
+    --bg-light: #fafafa;
+    --bg-medium: #f5f5f5;
+    --bg-dark: #f9f9f9;
+    --accent-color: #ff0000;
+  }
+
   body {
-    font-family: sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     display: flex;
     gap: 20px;
     padding: 20px;
+    margin: 0;
+    background: #fff;
   }
+
   #sidebar {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    width: 300px;
+    width: 320px;
+    background: var(--bg-light);
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid var(--border-light);
   }
+
   #main-area {
     display: flex;
     flex-direction: column;
     gap: 20px;
     flex: 1;
   }
-  #canvas-section {
-    display: flex;
-    gap: 20px;
-  }
-  #board-container {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  #library-textbox {
-    width: 200px;
-    height: 30px;
-    border: 1px solid #ccc;
-    padding: 5px;
-  }
-  .library-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 5px;
-    cursor: pointer;
-    border: 1px solid transparent;
-    margin-bottom: 5px;
-  }
-  .library-item:hover {
-    background: #f0f0f0;
-  }
-  .library-item canvas {
-    border: 1px solid #999;
-  }
-  #canvas-editor {
-    border: 1px solid #ccc;
+
+  .section {
+    background: var(--bg-light);
     padding: 15px;
-    background: #f5f5f5;
+    border-radius: 8px;
+    border: 1px solid var(--border-light);
   }
-  #canvas-editor-grid {
-    border: 2px solid #333;
-    background: #fff;
-    cursor: crosshair;
+
+  .section h3 {
+    margin: 0 0 10px 0;
+    color: var(--border-dark);
   }
-  #tile-counts {
-    border: 1px solid #ccc;
-    padding: 10px;
-    background: #f9f9f9;
+
+  /* Color Palette Styles */
+  .color-palette {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 4px;
+    margin: 10px 0;
   }
-  .count-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 5px;
+
+  .color-swatch {
+    width: 30px;
+    height: 30px;
+    border: 2px solid var(--border-medium);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
   }
-  .count-color {
-    width: 20px;
-    height: 20px;
-    border: 1px solid #333;
+
+  .color-swatch:hover {
+    transform: scale(1.1);
+    border-color: var(--border-dark);
   }
+
+  .color-swatch.selected {
+    border: 3px solid var(--accent-color);
+    transform: scale(1.1);
+  }
+
+  /* Input Styles */
+  input, select, textarea, button {
+    padding: 8px;
+    border: 1px solid var(--border-medium);
+    border-radius: 4px;
+    font-family: inherit;
+  }
+
+  button {
+    background: white;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+
+  button:hover {
+    background: var(--bg-medium);
+  }
+
+  button:active {
+    background: var(--border-light);
+  }
+
+  /* Library Styles */
   #library {
     display: flex;
     flex-direction: column;
     gap: 10px;
     max-height: 300px;
     overflow-y: auto;
-    border: 1px solid #ddd;
+    border: 1px solid var(--border-light);
     padding: 10px;
-    background: #fafafa;
+    background: white;
+    border-radius: 4px;
   }
-  #library-controls {
+
+  .library-item {
     display: flex;
-    flex-direction: column;
+    align-items: center;
     gap: 10px;
-    margin-bottom: 10px;
+    padding: 8px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
   }
-  #font-selector {
-    width: 100%;
-    padding: 5px;
+
+  .library-item:hover {
+    background: var(--bg-medium);
   }
-  #filter-input {
-    flex: 1;
-    padding: 5px;
-    border: 1px solid #ccc;
-    border-radius: 3px;
-  }
-  #filter-type {
-    padding: 5px;
-    border: 1px solid #ccc;
-    border-radius: 3px;
-    min-width: 80px;
-  }
+
   .block {
-    border: 1px solid #aaa;
+    border: 1px solid var(--border-medium);
     cursor: grab;
     image-rendering: pixelated;
+    border-radius: 2px;
   }
+
   .block.selected {
-    border: 3px solid #ff0000;
+    border: 3px solid var(--accent-color);
   }
+
   .block.hidden {
     display: none;
   }
-  .edit-cell {
-    border: 1px solid #999;
-    cursor: crosshair;
-  }
-  #blockEditor {
-    border: 1px solid #ccc;
-    padding: 15px;
-    margin-top: 10px;
-    background: #f5f5f5;
-  }
+
+  /* Board Styles */
   #board {
     position: relative;
-    background: #f9f9f9;
-    outline: 1px solid #333;
+    background: white;
+    outline: 2px solid var(--border-dark);
     display: grid;
     box-sizing: border-box;
     cursor: crosshair;
+    border-radius: 4px;
+    line-height: 0; /* Remove any line-height spacing */
+    font-size: 0; /* Remove font-size spacing */
   }
+
   .grid-cell {
-    width: 15px;
-    height: 15px;
+    width: var(--cell-size);
+    height: var(--cell-size);
     border: 0.5px solid #eee;
     box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
   }
+
+  .grid-cell canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
   .placed-block {
     position: absolute;
     image-rendering: pixelated;
     cursor: move;
     z-index: 10;
+    border-radius: 2px;
   }
-  textarea {
-    width: 100%;
-    height: 200px;
+
+  /* Editor Styles */
+  #block-editor {
+    background: var(--bg-medium);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    padding: 15px;
+    margin-top: 10px;
   }
-  label { font-weight: bold; }
-  .loading {
-    color: #666;
-    font-style: italic;
+
+  #edit-canvas {
+    border: 2px solid var(--border-dark);
+    background: white;
+    border-radius: 4px;
+  }
+
+  .edit-cell {
+    border: 1px solid var(--border-medium);
+    cursor: crosshair;
+  }
+
+  /* Controls Layout */
+  .control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 15px;
+  }
+
+  .control-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .tile-controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin: 15px 0;
+  }
+
+  /* Tile Type Selector */
+  .tile-type-selector {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    margin: 10px 0;
+  }
+
+  .tile-type-option {
+    width: 40px;
+    height: 40px;
+    border: 2px solid var(--border-medium);
+    border-radius: 6px;
+    cursor: pointer;
+    background: white;
+    transition: all 0.2s ease;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .tile-type-option:hover {
+    transform: scale(1.05);
+    border-color: var(--border-dark);
+  }
+
+  .tile-type-option.selected {
+    border: 3px solid var(--accent-color);
+    transform: scale(1.05);
+    background: #f0f8ff;
+  }
+
+  .tile-type-option canvas {
+    width: 30px;
+    height: 30px;
+    border-radius: 2px;
+  }
+
+  .tile-type-label {
+    font-size: 11px;
+    color: var(--border-dark);
+    text-align: center;
+    margin-top: 4px;
+    font-weight: 500;
+  }
+
+  /* Tile Count Styles */
+  .count-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+    padding: 6px;
+    background: white;
+    border: 1px solid var(--border-light);
+    border-radius: 4px;
+  }
+
+  .count-tile-preview {
+    width: 24px;
+    height: 24px;
+    border: 1px solid var(--border-dark);
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .count-text {
+    font-weight: 500;
+    color: var(--border-dark);
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 1200px) {
+    body {
+      flex-direction: column;
+    }
+    
+    #sidebar {
+      width: 100%;
+    }
   }
 </style>
 </head>
 <body>
 
 <div id="sidebar">
-  <div id="library-controls">
-    <label>Font Selection:</label>
+  <div class="section">
+    <h3>Font Selection</h3>
     <select id="font-selector">
       <option value="">Loading fonts...</option>
     </select>
-    
-    <label>Filter Blocks:</label>
-    <div style="display: flex; gap: 5px; align-items: center;">
+  </div>
+
+  <div class="section">
+    <h3>Filter Blocks</h3>
+    <div class="control-row">
       <select id="filter-type">
         <option value="id">ID</option>
         <option value="width">Width</option>
@@ -182,898 +333,1103 @@
     </div>
   </div>
 
-  <label>Library Blocks:</label>
-  <div id="library"></div>
+  <div class="section">
+    <h3>Library Blocks</h3>
+    <div id="library"></div>
+  </div>
 
-  <label>Block Editor:</label>
-  <button id="newBlock">Create New Block</button>
-  <button id="editBlock">Edit Selected Block</button>
-  <button id="deleteBlock">Delete Selected Block</button>
-  <div id="blockEditor" style="display: none;">
-    <h3>Edit Block: <span id="editingBlockId"></span></h3>
-    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-      <label>Block ID: <input type="text" id="blockId" placeholder="block_name"></label>
+  <div class="section">
+    <h3>Block Editor</h3>
+    <div class="control-row">
+      <button id="new-block">Create New</button>
+      <button id="edit-block">Edit Selected</button>
+      <button id="delete-block">Delete</button>
     </div>
-    <div>
-      <label>Height: <input type="number" id="editBlockHeight" value="5" min="1" max="20"></label>
-      <label>Width: <input type="number" id="editBlockWidth" value="3" min="1" max="20"></label>
-      <button id="resizeBlock">Resize Block</button>
-    </div>
-    <div>
-      <label>Tile Type:</label><br>
-      <input type="radio" name="cellType" value="pixel" id="pixelType" checked> Pixel<br>
-      <input type="radio" name="cellType" value="tl" id="quarterType1"> Top-Left<br>
-      <input type="radio" name="cellType" value="tr" id="quarterType2"> Top-Right<br>
-      <input type="radio" name="cellType" value="bl" id="quarterType3"> Bottom-Left<br>
-      <input type="radio" name="cellType" value="br" id="quarterType4"> Bottom-Right<br>
-      <br>
-      <label>Color: <input type="color" id="cellColor" value="#cccccc"></label><br><br>
-    </div>
-    <div style="display: flex; gap: 20px;">
-      <div id="editCanvas" style="border: 1px solid #333; background: #fff; position: relative;"></div>
-    </div>
-    <div>
-      <br>
-      <button id="clearCanvas">Clear All</button><br>
-      <button id="saveBlockEdit">Save Block</button>
-      <button id="cancelEdit">Cancel</button>
+    <div id="block-editor" style="display: none;">
+      <h4>Edit Block: <span id="editing-block-id"></span></h4>
+      <div class="control-group">
+        <label>Block ID: <input type="text" id="block-id" placeholder="block_name"></label>
+      </div>
+      <div class="control-row">
+        <label>Width: <input type="number" id="edit-block-width" value="3" min="1" max="20"></label>
+        <label>Height: <input type="number" id="edit-block-height" value="5" min="1" max="20"></label>
+        <button id="resize-block">Resize</button>
+      </div>
+      
+      <div class="tile-controls">
+        <div>
+          <label><strong>Tile Type:</strong></label>
+          <div class="tile-type-selector" id="editor-tile-selector"></div>
+        </div>
+        <br>
+        <div id="edit-canvas"></div><br>
+        <div>
+          <label><strong>Color:</strong></label>
+          <input type="color" id="cell-color" value="#cccccc">
+          <div class="color-palette" id="editor-palette"></div>
+        </div>
+      </div>
+      
+
+      
+      <div class="control-row" style="margin-top: 15px;">
+        <button id="clear-canvas">Clear All</button>
+        <button id="save-block-edit">Save Block</button>
+        <button id="cancel-edit">Cancel</button>
+      </div>
     </div>
   </div>
   
-  <label>Save / Load Library:</label>
-  <button id="saveLibrary">Export to JSON</button>
-  <button id="loadLibrary">Import from JSON</button>
-  <textarea id="libraryJson"></textarea>
+  <div class="section">
+    <h3>Save / Load Library</h3>
+    <div class="control-row">
+      <button id="save-library">Export JSON</button>
+      <button id="load-library">Import JSON</button>
+    </div>
+    <textarea id="library-json" rows="4"></textarea>
+  </div>
 </div>
 
 <div id="main-area">
-  <div id="canvas-section">
+  <div class="section">
     <div id="board-container">
       <div id="board"></div>
     </div>
   </div>
   
-  <div>
-    
-    <label>Board Size :</label>
-    <input type="number" id="boardHeight" value="2" min="8" max="128"> ×
-    <input type="number" id="boardWidth" value="2" min="8" max="128">
-    <button id="generateBoard">Resize</button>
-    <button id="clearMainCanvas">Fill Main Canvas</button>
-    <div>
+  <div class="section">
+    <h3>Board Controls</h3>
+    <div class="control-row">
+      <label>Board Size:</label>
+      <input type="number" id="board-height" value="2" min="8" max="128"> ×
+      <input type="number" id="board-width" value="2" min="8" max="128">
+      <button id="generate-board">Resize</button>
+      <button id="clear-main-canvas">Fill Canvas</button>
+    </div>
+    <div class="control-group">
       <label>Add Letters:</label>
       <input type="text" id="library-textbox" placeholder="Type letters here...">
     </div>
   </div>
 
-  <div>
-    <label>Canvas Editor Tools:</label><br>
-    <div style="display: flex; gap: 20px; margin-bottom: 10px;">
+  <div class="section">
+    <h3>Canvas Editor Tools</h3>
+    <div class="tile-controls">
       <div>
-        <label>Tile Type:</label><br>
-        <input type="radio" name="canvasCellType" value="pixel" id="canvasPixelType" checked> Pixel<br>
-        <input type="radio" name="canvasCellType" value="tl" id="canvasQuarter1"> Top-Left<br>
-        <input type="radio" name="canvasCellType" value="tr" id="canvasQuarter2"> Top-Right<br>
-        <input type="radio" name="canvasCellType" value="bl" id="canvasQuarter3"> Bottom-Left<br>
-        <input type="radio" name="canvasCellType" value="br" id="canvasQuarter4"> Bottom-Right<br>
+        <label><strong>Tile Type:</strong></label>
+        <div class="tile-type-selector" id="canvas-tile-selector"></div>
       </div>
       <div>
-        <label>Color: <input type="color" id="canvasCellColor" value="#cccccc"></label><br>
+        <label><strong>Color:</strong></label>
+        <input type="color" id="canvas-cell-color" value="#cccccc">
+        <div class="color-palette" id="canvas-palette"></div>
       </div>
     </div>
   </div>
   
-  <div id="tile-counts">
+  <div class="section">
     <h3>Tile Count</h3>
     <div id="count-display"></div>
   </div>
   
-  <div>
-    <label>Save / Load Board:</label><br>
-    <button id="saveBoard">Save Board to JSON</button>
-    <button id="loadBoard">Load Board from JSON</button>
-    <br><textarea id="boardJson"></textarea>
+  <div class="section">
+    <h3>Save / Load Board</h3>
+    <div class="control-row">
+      <button id="save-board">Save Board</button>
+      <button id="load-board">Load Board</button>
+    </div>
+    <textarea id="board-json" rows="4"></textarea>
   </div>
 </div>
 
 <script>
-const cellSize = 15;
-const cellSizeEdit = 40;
-const blockSize = { width: 1, height: 1 };
-let boardWidth = 32;
-let boardHeight = 32;
-let draggedData = null;
-let libraryBlocks = [];
-let availableFonts = [];
-let currentFont = '';
+// === CONSTANTS AND CONFIGURATION ===
+const CONFIG = {
+  cellSize: 15,
+  editCellSize: 40,
+  maxBoardSize: 128,
+  minBoardSize: 8,
+  maxBlockSize: 20,
+  minBlockSize: 1
+};
 
-const boardState = { width: boardWidth, height: boardHeight, blocks: [], canvas: [] };
-const boardContainer = document.getElementById('board');
-const boardJson = document.getElementById('boardJson');
-const libraryJson = document.getElementById('libraryJson');
-const boardInputWidth = document.getElementById('boardWidth');
-const boardInputHeight = document.getElementById('boardHeight');
-const fontSelector = document.getElementById('font-selector');
-const filterInput = document.getElementById('filter-input');
-const filterType = document.getElementById('filter-type');
+// Standard color palette
+const COLOR_PALETTE = [
+  '#ff0000', '#CCCCCC', "#808080", "#000000", "#FFFFFF"
+];
 
-let selectedLibraryBlock = null;
-let editingBlock = null;
-let editCanvas = null;
+// === STATE MANAGEMENT ===
+class AppState {
+  constructor() {
+    this.boardWidth = 32;
+    this.boardHeight = 32;
+    this.draggedData = null;
+    this.libraryBlocks = [];
+    this.availableFonts = [];
+    this.currentFont = '';
+    this.selectedLibraryBlock = null;
+    this.editingBlock = null;
+    this.boardState = {
+      width: this.boardWidth,
+      height: this.boardHeight,
+      blocks: [],
+      canvas: []
+    };
+  }
 
-// --- Font Management ---
-async function loadAvailableFonts() {
-  try {
-    // Try to fetch a directory listing or use a predefined list
-    // Since we can't directly list directory contents, we'll try common font files
-    const possibleFonts = ['06.json','04.json','07+ShadowDown.json','07.json','08.json','10+2xShadownLeft.json'];
-    availableFonts = [];
-    
-    for (const font of possibleFonts) {
-      try {
-        const response = await fetch(`fonts/${font}`);
-        if (response.ok) {
-          availableFonts.push(font);
-        }
-      } catch (e) {
-        // Font file doesn't exist, skip
-      }
-    }
-    
-    // Populate font selector
-    fontSelector.innerHTML = '';
-    if (availableFonts.length === 0) {
-      fontSelector.innerHTML = '<option value="">No fonts found</option>';
-    } else {
-      fontSelector.innerHTML = '<option value="">Select a font...</option>';
-      availableFonts.forEach(font => {
-        const option = document.createElement('option');
-        option.value = font;
-        option.textContent = font.replace('.json', '');
-        fontSelector.appendChild(option);
-      });
-      
-      // Load first font by default if available
-      if (availableFonts.length > 0) {
-        fontSelector.value = availableFonts[0];
-        currentFont = availableFonts[0];
-        await loadFontFromFile(currentFont);
-      }
-    }
-  } catch (error) {
-    console.error('Error loading fonts:', error);
-    fontSelector.innerHTML = '<option value="">Error loading fonts</option>';
+  setBoardSize(width, height) {
+    this.boardWidth = width;
+    this.boardHeight = height;
+    this.boardState.width = width;
+    this.boardState.height = height;
+  }
+
+  initializeCanvas() {
+    this.boardState.canvas = Array.from({length: this.boardHeight}, () => 
+      Array.from({length: this.boardWidth}, () => ({ shape: 'pixel', color: '#ffffff' }))
+    );
+  }
+
+  clearBoard() {
+    this.boardState.blocks = [];
+    this.initializeCanvas();
   }
 }
 
-async function loadFontFromFile(fontFile) {
-  if (!fontFile) return;
-  
-  try {
-    const response = await fetch(`fonts/${fontFile}`);
-    if (!response.ok) throw new Error('Font file not found');
-    
-    const fontData = await response.json();
-    
-    // Clear existing blocks and add new ones
-    libraryBlocks = [];
-    fontData.forEach(block => {
-      const exists = libraryBlocks.some(b => b.id === block.id);
-      if (!exists) {
-        libraryBlocks.push(block);
-      }
-    });
-    
-    renderLibrary();
-    currentFont = fontFile;
-  } catch (error) {
-    console.error('Error loading font:', error);
-    alert(`Error loading font: ${fontFile}`);
-  }
-}
-
-// Font selector event
-fontSelector.addEventListener('change', async (e) => {
-  if (e.target.value) {
-    await loadFontFromFile(e.target.value);
-  }
-});
-
-// --- Filter functionality ---
-function filterLibraryBlocks() {
-  const filterText = filterInput.value.toLowerCase().trim();
-  const filterBy = filterType.value;
-  const libraryDiv = document.getElementById('library');
-  const blocks = libraryDiv.querySelectorAll('.block');
-  
-  blocks.forEach((block, index) => {
-    const blockData = libraryBlocks[index];
-    if (!blockData) return;
-    
-    let shouldShow = false;
-    
-    if (filterText === '') {
-      shouldShow = true;
-    } else {
-      switch (filterBy) {
-        case 'id':
-          shouldShow = blockData.id.toLowerCase().includes(filterText);
-          break;
-        case 'width':
-          shouldShow = blockData.width.toString().includes(filterText);
-          break;
-        case 'height':
-          shouldShow = blockData.height.toString().includes(filterText);
-          break;
-        default:
-          shouldShow = blockData.id.toLowerCase().includes(filterText);
-      }
+// === UTILITY FUNCTIONS ===
+class Utils {
+  static drawCell(ctx, x, y, cellWidth, cellHeight, shape, color) {
+    ctx.fillStyle = color;
+    if (shape === 'pixel') {
+      ctx.fillRect(x, y, cellWidth, cellHeight);
+      return;
     }
-    
-    if (shouldShow) {
-      block.classList.remove('hidden');
-    } else {
-      block.classList.add('hidden');
-    }
-  });
-}
 
-// Filter input and dropdown events
-filterInput.addEventListener('input', filterLibraryBlocks);
-filterType.addEventListener('change', () => {
-  // Update placeholder text based on selected filter type
-  const filterBy = filterType.value;
-  switch (filterBy) {
-    case 'id':
-      filterInput.placeholder = 'Filter by ID...';
-      break;
-    case 'width':
-      filterInput.placeholder = 'Filter by width (e.g., 3)...';
-      break;
-    case 'height':
-      filterInput.placeholder = 'Filter by height (e.g., 5)...';
-      break;
-  }
-  filterLibraryBlocks(); // Re-filter with new criteria
-});
-
-// --- Utility: Draw a cell ---
-function drawCell(ctx, x, y, cellWidth, cellHeight, shape, color) {
-  ctx.fillStyle = color;
-  if (shape === 'pixel') {
-    ctx.fillRect(x, y, cellWidth, cellHeight);
-  } else {
     ctx.beginPath();
     const radius = Math.min(cellWidth, cellHeight) / 1;
-    if (shape === 'tl') {
-      ctx.moveTo(x + radius, y);
-      ctx.arc(x + radius, y + radius, radius, 1.5 * Math.PI, Math.PI, true);
-      ctx.lineTo(x, y + cellHeight);
-      ctx.lineTo(x + cellWidth, y + cellHeight);
-      ctx.lineTo(x + cellWidth, y);
-    } else if (shape === 'tr') {
-      ctx.moveTo(x + cellWidth - radius, y);
-      ctx.arc(x + cellWidth - radius, y + radius, radius, 1.5 * Math.PI, 0, false);
-      ctx.lineTo(x + cellWidth, y + cellHeight);
-      ctx.lineTo(x, y + cellHeight);
-      ctx.lineTo(x, y);
-    } else if (shape === 'bl') {
-      ctx.moveTo(x, y + cellHeight - radius);
-      ctx.arc(x + radius, y + cellHeight - radius, radius, Math.PI, 0.5 * Math.PI, true);
-      ctx.lineTo(x + cellWidth, y + cellHeight);
-      ctx.lineTo(x + cellWidth, y);
-      ctx.lineTo(x, y);
-    } else if (shape === 'br') {
-      ctx.moveTo(x + cellWidth - radius, y + cellHeight);
-      ctx.arc(x + cellWidth - radius, y + cellHeight - radius, radius, 0.5 * Math.PI, 0, true);
-      ctx.lineTo(x + cellWidth, y);
-      ctx.lineTo(x, y);
-      ctx.lineTo(x, y + cellHeight);
+    
+    switch (shape) {
+      case 'tl':
+        ctx.moveTo(x + radius, y);
+        ctx.arc(x + radius, y + radius, radius, 1.5 * Math.PI, Math.PI, true);
+        ctx.lineTo(x, y + cellHeight);
+        ctx.lineTo(x + cellWidth, y + cellHeight);
+        ctx.lineTo(x + cellWidth, y);
+        break;
+      case 'tr':
+        ctx.moveTo(x + cellWidth - radius, y);
+        ctx.arc(x + cellWidth - radius, y + radius, radius, 1.5 * Math.PI, 0, false);
+        ctx.lineTo(x + cellWidth, y + cellHeight);
+        ctx.lineTo(x, y + cellHeight);
+        ctx.lineTo(x, y);
+        break;
+      case 'bl':
+        ctx.moveTo(x, y + cellHeight - radius);
+        ctx.arc(x + radius, y + cellHeight - radius, radius, Math.PI, 0.5 * Math.PI, true);
+        ctx.lineTo(x + cellWidth, y + cellHeight);
+        ctx.lineTo(x + cellWidth, y);
+        ctx.lineTo(x, y);
+        break;
+      case 'br':
+        ctx.moveTo(x + cellWidth - radius, y + cellHeight);
+        ctx.arc(x + cellWidth - radius, y + cellHeight - radius, radius, 0.5 * Math.PI, 0, true);
+        ctx.lineTo(x + cellWidth, y);
+        ctx.lineTo(x, y);
+        ctx.lineTo(x, y + cellHeight);
+        break;
     }
     ctx.closePath();
     ctx.fill();
   }
-}
 
-// --- Legacy import function (kept for compatibility) ---
-function importFromJSON() {
-  // This is now handled by the font loading system
-}
-
-// --- Render a block to canvas ---
-function renderBlockToCanvas(blockData) {
-  const canvas = document.createElement('canvas');
-  canvas.className = 'block';
-  const displayWidth = blockData.width * cellSize;
-  const displayHeight = blockData.height * cellSize;
-  canvas.style.width = displayWidth + 'px';
-  canvas.style.height = displayHeight + 'px';
-  canvas.width = displayWidth;
-  canvas.height = displayHeight;
-  const ctx = canvas.getContext('2d');
-  
-  const cellWidth = displayWidth / blockData.width;
-  const cellHeight = displayHeight / blockData.height;
-  
-  blockData.cells.forEach((row, y) => {
-    row.forEach((cell, x) => {
-      drawCell(ctx, x * cellWidth, y * cellHeight, cellWidth, cellHeight, cell.shape, cell.color);
+  static createElement(tag, className = '', attributes = {}) {
+    const element = document.createElement(tag);
+    if (className) element.className = className;
+    Object.entries(attributes).forEach(([key, value]) => {
+      element.setAttribute(key, value);
     });
-  });
-  return canvas;
+    return element;
+  }
+
+  static countTiles(boardState) {
+    const counts = {};
+
+    // Count canvas cells
+    if (boardState.canvas && Array.isArray(boardState.canvas)) {
+      boardState.canvas.forEach(row => {
+        if (Array.isArray(row)) {
+          row.forEach(cell => {
+            if (cell && cell.color && cell.color !== '#ffffff') {
+              const tile = ['tl','tr','bl','br'].includes(cell.shape) ? 'Quarter' : cell.shape;
+              const key = `${tile}|${cell.color}`;
+              counts[key] = (counts[key] || 0) + 1;
+            }
+          });
+        }
+      });
+    }
+
+    // Count block cells
+    if (boardState.blocks && Array.isArray(boardState.blocks)) {
+      boardState.blocks.forEach(block => {
+        if (block.cells && Array.isArray(block.cells)) {
+          block.cells.forEach(row => {
+            if (Array.isArray(row)) {
+              row.forEach(cell => {
+                if (cell && cell.color && cell.shape) {
+                  const tile = ['tl','tr','bl','br'].includes(cell.shape) ? 'Quarter' : cell.shape;
+                  const key = `${tile}|${cell.color}`;
+                  counts[key] = (counts[key] || 0) + 1;
+                }
+              });
+            }
+          });
+        }
+      });
+    }
+
+    return counts;
+  }
 }
 
-// --- Render Library ---
-function renderLibrary() {
-  const lib = document.getElementById('library');
-  lib.innerHTML = '';
-  libraryBlocks.forEach((block, index) => {
-    const canvas = renderBlockToCanvas(block);
-    canvas.draggable = true;
-    canvas.dataset.blockIndex = index;
-    canvas.title = `Block: ${block.id}`; // Add tooltip
+// === TILE TYPE SELECTOR ===
+class TileTypeSelector {
+  constructor(containerId, defaultType = 'pixel') {
+    this.container = document.getElementById(containerId);
+    this.selectedType = defaultType;
+    this.selectedElement = null;
+    this.tileTypes = [
+      { value: 'pixel', label: 'Pixel' },
+      { value: 'tl', label: 'Top-Left' },
+      { value: 'tr', label: 'Top-Right' },
+      { value: 'bl', label: 'Bottom-Left' },
+      { value: 'br', label: 'Bottom-Right' }
+    ];
+    this.init();
+  }
+
+  init() {
+    this.render();
+  }
+
+  render() {
+    this.container.innerHTML = '';
     
-    canvas.addEventListener('click', e => {
-      e.preventDefault();
-      selectLibraryBlock(index, canvas);
+    this.tileTypes.forEach(tileType => {
+      const wrapper = Utils.createElement('div');
+      wrapper.style.textAlign = 'center';
+      
+      const option = Utils.createElement('div', 'tile-type-option');
+      option.dataset.tileType = tileType.value;
+      
+      // Create preview canvas
+      const canvas = Utils.createElement('canvas');
+      canvas.width = 30;
+      canvas.height = 30;
+      const ctx = canvas.getContext('2d');
+      
+      // Draw preview of the tile type
+      Utils.drawCell(ctx, 5, 5, 20, 20, tileType.value, '#666666');
+      
+      option.appendChild(canvas);
+      
+      const label = Utils.createElement('div', 'tile-type-label');
+      label.textContent = tileType.label;
+      
+      wrapper.appendChild(option);
+      wrapper.appendChild(label);
+      
+      option.addEventListener('click', () => this.selectType(tileType.value, option));
+      
+      // Set default selection
+      if (tileType.value === this.selectedType) {
+        this.selectType(tileType.value, option);
+      }
+      
+      this.container.appendChild(wrapper);
     });
-    
-    canvas.addEventListener('dragstart', e => {
-      const rect = canvas.getBoundingClientRect();
-      draggedData = {
-        source: 'library',
-        blockData: JSON.parse(JSON.stringify(block)),
-        offsetX: e.clientX - rect.left,
-        offsetY: e.clientY - rect.top
-      };
-    });
-    lib.appendChild(canvas);
-  });
-  
-  // Apply current filter
-  filterLibraryBlocks();
-}
+  }
 
-// Trigger on any text input
-const textbox = document.getElementById('library-textbox');
-textbox.addEventListener('input', function () {
-  const currentText  = textbox.value;
-  // loop through each text input and try to match a block from the library
-  if (currentText.length > 0) {
-    const input = currentText[currentText.length - 1];
-    libraryBlocks.forEach((block, index) => {
-      if (input == block.id) {
-        addBlockToMainCanvas(block);
-        // console.log(block.id);
+  selectType(type, element) {
+    // Remove previous selection
+    if (this.selectedElement) {
+      this.selectedElement.classList.remove('selected');
+    }
+    
+    // Set new selection
+    element.classList.add('selected');
+    this.selectedElement = element;
+    this.selectedType = type;
+  }
+
+  getSelectedType() {
+    return this.selectedType;
+  }
+
+  updatePreview() {
+    // Re-render with current color if needed
+    this.render();
+  }
+}
+class ColorPalette {
+  constructor(containerId, colorInputId) {
+    this.container = document.getElementById(containerId);
+    this.colorInput = document.getElementById(colorInputId);
+    this.selectedSwatch = null;
+    this.init();
+  }
+
+  init() {
+    this.render();
+    this.setupEventListeners();
+  }
+
+  render() {
+    this.container.innerHTML = '';
+    COLOR_PALETTE.forEach(color => {
+      const swatch = Utils.createElement('div', 'color-swatch');
+      swatch.style.backgroundColor = color;
+      swatch.dataset.color = color;
+      swatch.addEventListener('click', () => this.selectColor(color, swatch));
+      this.container.appendChild(swatch);
+    });
+  }
+
+  selectColor(color, swatch) {
+    if (this.selectedSwatch) {
+      this.selectedSwatch.classList.remove('selected');
+    }
+    swatch.classList.add('selected');
+    this.selectedSwatch = swatch;
+    this.colorInput.value = color;
+  }
+
+  setupEventListeners() {
+    this.colorInput.addEventListener('change', (e) => {
+      const color = e.target.value;
+      // Remove selection from palette if custom color is chosen
+      if (this.selectedSwatch) {
+        this.selectedSwatch.classList.remove('selected');
+        this.selectedSwatch = null;
       }
     });
   }
-});
-
-function selectLibraryBlock(index, canvas) {
-  document.querySelectorAll('.block').forEach(b => b.classList.remove('selected'));
-  canvas.classList.add('selected');
-  selectedLibraryBlock = index;
 }
 
-function addBlockToMainCanvas(blockData) {
-  // Find a suitable position to place the block
-  let placed = false;
-  for (let y = 0; y <= boardHeight - blockData.height && !placed; y++) {
-    for (let x = 0; x <= boardWidth - blockData.width && !placed; x++) {
-      if (!isOverlapping(x, y, blockData)) {
-        placeBlock(x, y, blockData);
-        placed = true;
-        updateTileCount();
+// === FONT MANAGER ===
+class FontManager {
+  constructor(app) {
+    this.app = app;
+    this.fontSelector = document.getElementById('font-selector');
+    this.init();
+  }
+
+  async init() {
+    await this.loadAvailableFonts();
+    this.setupEventListeners();
+  }
+
+  async loadAvailableFonts() {
+    try {
+      const possibleFonts = ['04.json','06.json','07+ShadowDown.json','07.json','08.json','10+2xShadownLeft.json'];
+      this.app.state.availableFonts = [];
+      
+      for (const font of possibleFonts) {
+        try {
+          const response = await fetch(`fonts/${font}`);
+          if (response.ok) {
+            this.app.state.availableFonts.push(font);
+          }
+        } catch (e) {
+          // Font doesn't exist, skip
+        }
+      }
+      
+      this.populateFontSelector();
+    } catch (error) {
+      console.error('Error loading fonts:', error);
+      this.fontSelector.innerHTML = '<option value="">Error loading fonts</option>';
+    }
+  }
+
+  populateFontSelector() {
+    this.fontSelector.innerHTML = '';
+    if (this.app.state.availableFonts.length === 0) {
+      this.fontSelector.innerHTML = '<option value="">No fonts found</option>';
+    } else {
+      this.fontSelector.innerHTML = '<option value="">Select a font...</option>';
+      this.app.state.availableFonts.forEach(font => {
+        const option = Utils.createElement('option', '', { value: font });
+        option.textContent = font.replace('.json', '');
+        this.fontSelector.appendChild(option);
+      });
+      
+      if (this.app.state.availableFonts.length > 0) {
+        this.fontSelector.value = this.app.state.availableFonts[0];
+        this.loadFont(this.app.state.availableFonts[0]);
       }
     }
   }
-  if (!placed) {
-    alert('No space available to place this block');
+
+  async loadFont(fontFile) {
+    if (!fontFile) return;
+    
+    try {
+      const response = await fetch(`fonts/${fontFile}`);
+      if (!response.ok) throw new Error('Font file not found');
+      
+      const fontData = await response.json();
+      this.app.state.libraryBlocks = [];
+      
+      fontData.forEach(block => {
+        const exists = this.app.state.libraryBlocks.some(b => b.id === block.id);
+        if (!exists) {
+          this.app.state.libraryBlocks.push(block);
+        }
+      });
+      
+      this.app.libraryRenderer.render();
+      this.app.state.currentFont = fontFile;
+    } catch (error) {
+      console.error('Error loading font:', error);
+      alert(`Error loading font: ${fontFile}`);
+    }
+  }
+
+  setupEventListeners() {
+    this.fontSelector.addEventListener('change', (e) => {
+      if (e.target.value) {
+        this.loadFont(e.target.value);
+      }
+    });
   }
 }
 
-// Initialize fonts on load
-loadAvailableFonts();
-
-// --- Generate Board ---
-function generateBoard() {
-  boardWidth = parseInt(boardInputWidth.value)*16;
-  boardHeight = parseInt(boardInputHeight.value)*16;
-  boardState.width = boardWidth;
-  boardState.height = boardHeight;
-  boardState.blocks = [];
-  
-  // Initialize canvas - only use boardState.canvas
-  boardState.canvas = Array.from({length: boardHeight}, () => 
-    Array.from({length: boardWidth}, () => ({ shape: 'pixel', color: '#ffffff' }))
-  );
-
-  boardContainer.innerHTML = '';
-  boardContainer.style.width = `${boardWidth * cellSize}px`;
-  boardContainer.style.height = `${boardHeight * cellSize}px`;
-  boardContainer.style.gridTemplateColumns = `repeat(${boardWidth}, ${cellSize}px)`;
-  boardContainer.style.gridTemplateRows = `repeat(${boardHeight}, ${cellSize}px)`;
-
-  for (let i = 0; i < boardWidth * boardHeight; i++) {
-    const cell = document.createElement('div');
-    cell.className = 'grid-cell';
-    
-    // Add click handler for direct editing
-    const row = Math.floor(i / boardWidth);
-    const col = i % boardWidth;
-    cell.addEventListener('click', () => editCanvasCell(col, row));
-    
-    boardContainer.appendChild(cell);
+// === LIBRARY RENDERER ===
+class LibraryRenderer {
+  constructor(app) {
+    this.app = app;
+    this.libraryContainer = document.getElementById('library');
+    this.filterInput = document.getElementById('filter-input');
+    this.filterType = document.getElementById('filter-type');
+    this.setupEventListeners();
   }
-  
-  updateBoardVisuals();
-  updateTileCount();
+
+  render() {
+    this.libraryContainer.innerHTML = '';
+    this.app.state.libraryBlocks.forEach((block, index) => {
+      const canvas = this.renderBlockToCanvas(block);
+      canvas.draggable = true;
+      canvas.dataset.blockIndex = index;
+      canvas.title = `Block: ${block.id}`;
+      
+      canvas.addEventListener('click', (e) => {
+        e.preventDefault();
+        this.selectBlock(index, canvas);
+      });
+      
+      canvas.addEventListener('dragstart', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        this.app.state.draggedData = {
+          source: 'library',
+          blockData: JSON.parse(JSON.stringify(block)),
+          offsetX: e.clientX - rect.left,
+          offsetY: e.clientY - rect.top
+        };
+      });
+      
+      this.libraryContainer.appendChild(canvas);
+    });
+    
+    this.applyFilter();
+  }
+
+  renderBlockToCanvas(blockData) {
+    const canvas = Utils.createElement('canvas', 'block');
+    const displayWidth = blockData.width * CONFIG.cellSize;
+    const displayHeight = blockData.height * CONFIG.cellSize;
+    
+    canvas.style.width = displayWidth + 'px';
+    canvas.style.height = displayHeight + 'px';
+    canvas.width = displayWidth;
+    canvas.height = displayHeight;
+    
+    const ctx = canvas.getContext('2d');
+    const cellWidth = displayWidth / blockData.width;
+    const cellHeight = displayHeight / blockData.height;
+    
+    blockData.cells.forEach((row, y) => {
+      row.forEach((cell, x) => {
+        Utils.drawCell(ctx, x * cellWidth, y * cellHeight, cellWidth, cellHeight, cell.shape, cell.color);
+      });
+    });
+    
+    return canvas;
+  }
+
+  selectBlock(index, canvas) {
+    document.querySelectorAll('.block').forEach(b => b.classList.remove('selected'));
+    canvas.classList.add('selected');
+    this.app.state.selectedLibraryBlock = index;
+  }
+
+  applyFilter() {
+    const filterText = this.filterInput.value.toLowerCase().trim();
+    const filterBy = this.filterType.value;
+    const blocks = this.libraryContainer.querySelectorAll('.block');
+    
+    blocks.forEach((block, index) => {
+      const blockData = this.app.state.libraryBlocks[index];
+      if (!blockData) return;
+      
+      let shouldShow = filterText === '';
+      
+      if (!shouldShow) {
+        switch (filterBy) {
+          case 'id':
+            shouldShow = blockData.id.toLowerCase().includes(filterText);
+            break;
+          case 'width':
+            shouldShow = blockData.width.toString().includes(filterText);
+            break;
+          case 'height':
+            shouldShow = blockData.height.toString().includes(filterText);
+            break;
+        }
+      }
+      
+      block.classList.toggle('hidden', !shouldShow);
+    });
+  }
+
+  setupEventListeners() {
+    this.filterInput.addEventListener('input', () => this.applyFilter());
+    this.filterType.addEventListener('change', () => {
+      const filterBy = this.filterType.value;
+      const placeholders = {
+        id: 'Filter by ID...',
+        width: 'Filter by width (e.g., 3)...',
+        height: 'Filter by height (e.g., 5)...'
+      };
+      this.filterInput.placeholder = placeholders[filterBy] || 'Filter...';
+      this.applyFilter();
+    });
+  }
 }
 
-// --- Canvas Editor Functions ---
-function updateBoardVisuals() {
-  // Update the visual representation of the board based on boardState.canvas
-  const cells = boardContainer.querySelectorAll('.grid-cell');
-  
-  boardState.canvas.forEach((row, y) => {
-    row.forEach((cell, x) => {
-      const index = y * boardWidth + x;
-      const cellDiv = cells[index];
-      if (cellDiv) {
-        // Create or update canvas for this cell
+// === BOARD MANAGER ===
+class BoardManager {
+  constructor(app) {
+    this.app = app;
+    this.boardContainer = document.getElementById('board');
+    this.setupEventListeners();
+  }
+
+  generate() {
+    const widthInput = document.getElementById('board-width');
+    const heightInput = document.getElementById('board-height');
+    
+    const newWidth = Math.max(CONFIG.minBoardSize, Math.min(CONFIG.maxBoardSize, parseInt(widthInput.value) * 16));
+    const newHeight = Math.max(CONFIG.minBoardSize, Math.min(CONFIG.maxBoardSize, parseInt(heightInput.value) * 16));
+    
+    this.app.state.setBoardSize(newWidth, newHeight);
+    this.app.state.clearBoard();
+    this.app.state.initializeCanvas();
+    
+    this.renderGrid();
+    this.updateVisuals();
+    this.app.tileCounter.update();
+  }
+
+  renderGrid() {
+    this.boardContainer.innerHTML = '';
+    this.boardContainer.style.width = `${this.app.state.boardWidth * CONFIG.cellSize}px`;
+    this.boardContainer.style.height = `${this.app.state.boardHeight * CONFIG.cellSize}px`;
+    this.boardContainer.style.gridTemplateColumns = `repeat(${this.app.state.boardWidth}, ${CONFIG.cellSize}px)`;
+    this.boardContainer.style.gridTemplateRows = `repeat(${this.app.state.boardHeight}, ${CONFIG.cellSize}px)`;
+    this.boardContainer.style.gap = '0'; // Ensure no gaps between cells
+
+    for (let row = 0; row < this.app.state.boardHeight; row++) {
+      for (let col = 0; col < this.app.state.boardWidth; col++) {
+        const cell = Utils.createElement('div', 'grid-cell');
+        cell.dataset.row = row;
+        cell.dataset.col = col;
+        
+        cell.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          this.editCanvasCell(col, row);
+        });
+        
+        this.boardContainer.appendChild(cell);
+      }
+    }
+  }
+
+  updateVisuals() {
+    const cells = this.boardContainer.querySelectorAll('.grid-cell');
+    
+    this.app.state.boardState.canvas.forEach((row, y) => {
+      row.forEach((cell, x) => {
+        const index = y * this.app.state.boardWidth + x;
+        const cellDiv = cells[index];
+        if (!cellDiv) return;
+        
         let canvas = cellDiv.querySelector('canvas');
         if (!canvas) {
-          canvas = document.createElement('canvas');
-          canvas.width = cellSize;
-          canvas.height = cellSize;
+          canvas = Utils.createElement('canvas');
+          canvas.width = CONFIG.cellSize;
+          canvas.height = CONFIG.cellSize;
           canvas.style.width = '100%';
           canvas.style.height = '100%';
+          canvas.style.display = 'block';
           canvas.style.pointerEvents = 'none';
           cellDiv.appendChild(canvas);
         }
         
         const ctx = canvas.getContext('2d');
-        ctx.clearRect(0, 0, cellSize, cellSize);
-        drawCell(ctx, 0, 0, cellSize, cellSize, cell.shape, cell.color);
-      }
-    });
-  });
-}
-
-function editCell(x, y) {
-  const cellType = document.querySelector('input[name="cellType"]:checked').value;
-  const color = document.getElementById('cellColor').value;
-  
-  editingBlock.cells[y][x] = {
-    shape: cellType,
-    color: color
-  };
-  
-  createEditCanvas();
-}
-
-document.getElementById('clearCanvas').addEventListener('click', () => {
-  const newColor = document.getElementById('cellColor').value;
-  editingBlock.cells = Array.from({length: editingBlock.height}, () => 
-    Array.from({length: editingBlock.width}, () => ({ shape: 'pixel', color: newColor }))
-  );
-  createEditCanvas();
-});
-
-document.getElementById('saveBlockEdit').addEventListener('click', () => {
-  const newId = document.getElementById('blockId').value.trim();
-  if (!newId) {
-    alert('Please enter a block ID');
-    return;
-  }
-  
-  editingBlock.id = newId;
-  
-  if (selectedLibraryBlock !== null) {
-    libraryBlocks[selectedLibraryBlock] = editingBlock;
-  } else {
-    libraryBlocks.push(editingBlock);
-  }
-  
-  renderLibrary();
-  closeBlockEditor();
-});
-
-document.getElementById('cancelEdit').addEventListener('click', closeBlockEditor);
-
-function closeBlockEditor() {
-  document.getElementById('blockEditor').style.display = 'none';
-  editingBlock = null;
-  selectedLibraryBlock = null;
-}
-
-function editCanvasCell(x, y) {
-  const cellType = document.querySelector('input[name="canvasCellType"]:checked').value;
-  const color = document.getElementById('canvasCellColor').value;
-  
-  // Update only boardState.canvas - single source of truth
-  boardState.canvas[y][x] = {
-    shape: cellType,
-    color: color
-  };
-  
-  console.log(`Updated cell at (${x}, ${y}) with:`, boardState.canvas[y][x]);
-  
-  updateBoardVisuals();
-  updateTileCount();
-}
-
-document.getElementById('clearMainCanvas').addEventListener('click', () => {
-  const color = document.getElementById('canvasCellColor').value;
-  
-  // Reset only boardState.canvas
-  boardState.canvas = Array.from({length: boardHeight}, () => 
-    Array.from({length: boardWidth}, () => ({ shape: 'pixel', color: color }))
-  );
-  boardState.blocks = [];
-  
-  // Clear placed blocks from visual board
-  document.querySelectorAll('.placed-block').forEach(block => block.remove());
-  
-  updateBoardVisuals();
-  updateTileCount();
-});
-
-document.getElementById('generateBoard').addEventListener('click', generateBoard);
-generateBoard();
-
-// --- Drop logic ---
-boardContainer.addEventListener('dragover', e => e.preventDefault());
-boardContainer.addEventListener('drop', e => {
-  e.preventDefault();
-  if (!draggedData) return;
-  const rect = boardContainer.getBoundingClientRect();
-  const dropX = Math.floor((e.clientX - rect.left - draggedData.offsetX) / cellSize);
-  const dropY = Math.floor((e.clientY - rect.top - draggedData.offsetY) / cellSize);
-  const blockData = draggedData.blockData;
-  if (
-    dropX < 0 || dropX + blockData.width > boardWidth ||
-    dropY < 0 || dropY + blockData.height > boardHeight
-  ) {
-    draggedData = null;
-    return;
-  }
-  if (isOverlapping(dropX, dropY, blockData)) {
-    alert('Block overlaps another.');
-    draggedData = null;
-    return;
-  }
-  placeBlock(dropX, dropY, draggedData.blockData);
-  draggedData = null;
-  updateTileCount();
-});
-
-function placeBlock(x, y, blockData) {
-  const canvas = renderBlockToCanvas(blockData);
-  canvas.className = 'placed-block';
-  canvas.style.left = `${x * cellSize}px`;
-  canvas.style.top = `${y * cellSize}px`;
-  canvas.draggable = true;
-  canvas.dataset.gridX = x;
-  canvas.dataset.gridY = y;
-  boardContainer.appendChild(canvas);
-
-  boardState.blocks.push({ x, y, width: blockData.width, height: blockData.height, cells: blockData.cells });
-
-  canvas.addEventListener('dragstart', e => {
-    const rect = canvas.getBoundingClientRect();
-    draggedData = {
-      source: 'board',
-      blockData: blockData,
-      offsetX: e.clientX - rect.left,
-      offsetY: e.clientY - rect.top
-    };
-    const idx = boardState.blocks.findIndex(b => b.x === x && b.y === y);
-    if (idx >= 0) boardState.blocks.splice(idx, 1);
-    boardContainer.removeChild(canvas);
-    updateTileCount();
-  });
-}
-
-function isOverlapping(gridX, gridY, blockData) {
-  return boardState.blocks.some(block =>
-    gridX < block.x + block.width &&
-    gridX + blockData.width > block.x &&
-    gridY < block.y + block.height &&
-    gridY + blockData.height > block.y
-  );
-}
-
-// --- Tile Count Function ---
-function updateTileCount() {
-  console.log('Updating tile count...'); // Debug log
-  console.log('boardState:', boardState); // Debug log
-  
-  const counts = countUniqueShapeColor(boardState);
-  const display = document.getElementById('count-display');
-  display.innerHTML = '';
-  
-  console.log('Tile counts:', counts); // Debug log
-  
-  if (Object.keys(counts).length === 0) {
-    display.innerHTML = '<div>No tiles to count</div>';
-    return;
-  }
-  
-  Object.entries(counts).forEach(([key, count]) => {
-    const [shape, color] = key.split('|');
-    const item = document.createElement('div');
-    item.className = 'count-item';
-    
-    const colorDiv = document.createElement('div');
-    colorDiv.className = 'count-color';
-    colorDiv.style.backgroundColor = color;
-    
-    const text = document.createElement('span');
-    text.textContent = `${shape}: ${count}`;
-    
-    item.appendChild(colorDiv);
-    item.appendChild(text);
-    display.appendChild(item);
-  });
-}
-
-function countUniqueShapeColor(data) {
-  const counts = {};
-  
-  console.log('Counting tiles in data:', data);
-
-  // Count canvas cells (background/painted cells)
-  if (data.canvas && Array.isArray(data.canvas)) {
-    console.log('Processing canvas with', data.canvas.length, 'rows');
-    for (let y = 0; y < data.canvas.length; y++) {
-      const row = data.canvas[y];
-      if (Array.isArray(row)) {
-        for (let x = 0; x < row.length; x++) {
-          const cell = row[x];
-          if (cell && cell.color && cell.color !== '#ffffff') { // Skip white background cells
-            let tile = ['tl','tr','bl','br'].includes(cell.shape) ? 'Quarter' : cell.shape;
-            const key = `${tile}|${cell.color}`;
-            counts[key] = (counts[key] || 0) + 1;
-            console.log(`Canvas cell at (${x},${y}): ${tile}, ${cell.color}`);
-          }
-        }
-      }
-    }
-  } else {
-    console.log('No canvas data found or not an array');
-  }
-
-  // Count block cells
-  if (data.blocks && Array.isArray(data.blocks)) {
-    console.log('Processing', data.blocks.length, 'blocks');
-    for (const block of data.blocks) {
-      if (block.cells && Array.isArray(block.cells)) {
-        for (const row of block.cells) {
-          if (Array.isArray(row)) {
-            for (const cell of row) {
-              if (cell && cell.color && cell.shape) {
-                let tile = ['tl','tr','bl','br'].includes(cell.shape) ? 'Quarter' : cell.shape;
-                const key = `${tile}|${cell.color}`;
-                counts[key] = (counts[key] || 0) + 1;
-                console.log(`Block cell: ${tile}, ${cell.color}`);
-              }
-            }
-          }
-        }
-      }
-    }
-  } else {
-    console.log('No block data found or not an array');
-  }
-
-  console.log('Final counts:', counts);
-  return counts;
-}
-
-// --- Save / Load Board ---
-document.getElementById('saveBoard').addEventListener('click', () => {
-  boardJson.value = JSON.stringify(boardState, null, 2);
-});
-
-document.getElementById('loadBoard').addEventListener('click', () => {
-  try {
-    const data = JSON.parse(boardJson.value);
-    boardInputWidth.value = data.width / 16;
-    boardInputHeight.value = data.height / 16;
-    
-    if (data.canvas) {
-      boardState.canvas = data.canvas; // Direct assignment since we only have one source
-    }
-    
-    generateBoard();
-    
-    if (data.blocks) {
-      data.blocks.forEach(block => {
-        placeBlock(block.x, block.y, { 
-          width: block.width, 
-          height: block.height, 
-          cells: block.cells 
-        });
+        ctx.clearRect(0, 0, CONFIG.cellSize, CONFIG.cellSize);
+        Utils.drawCell(ctx, 0, 0, CONFIG.cellSize, CONFIG.cellSize, cell.shape, cell.color);
       });
-    }
-    updateBoardVisuals();
-    updateTileCount();
-  } catch (e) {
-    alert('Invalid JSON');
-  }
-});
-
-// --- Save / Load Library ---
-document.getElementById('saveLibrary').addEventListener('click', () => {
-  libraryJson.value = JSON.stringify(libraryBlocks, null, 2);
-});
-
-document.getElementById('loadLibrary').addEventListener('click', () => {
-  try {
-    const data = JSON.parse(libraryJson.value);
-    libraryBlocks = data;
-    renderLibrary();
-    selectedLibraryBlock = null;
-  } catch (e) {
-    alert('Invalid Library JSON');
-  }
-});
-
-// --- Block Editor ---
-document.getElementById('newBlock').addEventListener('click', () => {
-  const newWidth = parseInt(document.getElementById('editBlockWidth').value) || 3;
-  const newHeight = parseInt(document.getElementById('editBlockHeight').value) || 5;
-  editingBlock = {
-    id: `block_${Date.now()}`,
-    width: newWidth,
-    height: newHeight,
-    cells: Array.from({length: newHeight}, () => 
-      Array.from({length: newWidth}, () => ({ shape: 'pixel', color: '#cccccc' }))
-    )
-  };
-  openBlockEditor();
-});
-
-document.getElementById('editBlock').addEventListener('click', () => {
-  if (selectedLibraryBlock === null) {
-    alert('Please select a block to edit first');
-    return;
-  }
-  editingBlock = JSON.parse(JSON.stringify(libraryBlocks[selectedLibraryBlock]));
-  openBlockEditor();
-});
-
-document.getElementById('deleteBlock').addEventListener('click', () => {
-  if (selectedLibraryBlock === null) {
-    alert('Please select a block to delete first');
-    return;
-  } else {
-    libraryBlocks.splice(selectedLibraryBlock, 1);
-    selectedLibraryBlock = null;
-    renderLibrary();
-  }
-});
-
-document.getElementById('resizeBlock').addEventListener('click', () => {
-  if (!editingBlock) return;
-  const newWidth = parseInt(document.getElementById('editBlockWidth').value);
-  const newHeight = parseInt(document.getElementById('editBlockHeight').value);
-  
-  if (newWidth < 1 || newHeight < 1 || newWidth > 20 || newHeight > 20) {
-    alert('Block size must be between 1x1 and 20x20');
-    return;
-  }
-  
-  const newCells = Array.from({length: newHeight}, (_, row) =>
-    Array.from({length: newWidth}, (_, col) => {
-      if (row < editingBlock.height && col < editingBlock.width && editingBlock.cells[row] && editingBlock.cells[row][col]) {
-        return editingBlock.cells[row][col];
-      }
-      return { shape: 'pixel', color: '#cccccc' };
-    })
-  );
-  
-  editingBlock.width = newWidth;
-  editingBlock.height = newHeight;
-  editingBlock.cells = newCells;
-  createEditCanvas();
-});
-
-function openBlockEditor() {
-  document.getElementById('blockEditor').style.display = 'block';
-  document.getElementById('editingBlockId').textContent = editingBlock.id;
-  document.getElementById('blockId').value = editingBlock.id;
-  document.getElementById('editBlockWidth').value = editingBlock.width;
-  document.getElementById('editBlockHeight').value = editingBlock.height;
-  createEditCanvas();
-}
-
-function createEditCanvas() {
-  const container = document.getElementById('editCanvas');
-  container.innerHTML = '';
-  container.style.width = `${editingBlock.width * cellSizeEdit}px`;
-  container.style.height = `${editingBlock.height * cellSizeEdit}px`;
-  container.style.display = 'grid';
-  container.style.gridTemplateColumns = `repeat(${editingBlock.width}, ${cellSizeEdit}px)`;
-  container.style.gridTemplateRows = `repeat(${editingBlock.height}, ${cellSizeEdit}px)`;
-
-  editingBlock.cells.forEach((row, y) => {
-    row.forEach((cell, x) => {
-      const cellDiv = document.createElement('div');
-      cellDiv.className = 'edit-cell';
-      cellDiv.style.width = `${cellSizeEdit}px`;
-      cellDiv.style.height = `${cellSizeEdit}px`;
-      cellDiv.dataset.x = x;
-      cellDiv.dataset.y = y;
-      
-      const canvas = document.createElement('canvas');
-      canvas.width = cellSizeEdit;
-      canvas.height = cellSizeEdit;
-      canvas.style.width = '100%';
-      canvas.style.height = '100%';
-      canvas.style.pointerEvents = 'none';
-      
-      const ctx = canvas.getContext('2d');
-      drawCell(ctx, 0, 0, cellSizeEdit, cellSizeEdit, cell.shape, cell.color);
-      
-      cellDiv.appendChild(canvas);
-      cellDiv.addEventListener('click', () => editCell(x, y));
-      container.appendChild(cellDiv);
     });
-  });
-}
-
-function editCell(x, y) {
-  const cellType = document.querySelector('input[name="cellType"]:checked').value;
-  const color = document.getElementById('cellColor').value;
-  
-  editingBlock.cells[y][x] = {
-    shape: cellType,
-    color: color
-  };
-  
-  createEditCanvas(); // Refresh the edit canvas
-}
-
-document.getElementById('clearCanvas').addEventListener('click', () => {
-  const newColor = document.getElementById('cellColor').value;
-  editingBlock.cells = Array.from({length: editingBlock.height}, () => 
-    Array.from({length: editingBlock.width}, () => ({ shape: 'pixel', color: newColor }))
-  );
-  createEditCanvas();
-});
-
-document.getElementById('saveBlockEdit').addEventListener('click', () => {
-  const newId = document.getElementById('blockId').value.trim();
-  if (!newId) {
-    alert('Please enter a block ID');
-    return;
   }
-  
-  editingBlock.id = newId;
-  console.log(editingBlock.id);
-  console.log(newId);
-  if (selectedLibraryBlock !== null) {
-    // Editing existing block
-    libraryBlocks[selectedLibraryBlock] = editingBlock;
-  } else {
-    // Adding new block
-    libraryBlocks.push(editingBlock);
+
+  editCanvasCell(x, y) {
+    const cellType = this.app.canvasTileSelector.getSelectedType();
+    const color = document.getElementById('canvas-cell-color').value;
+    
+    this.app.state.boardState.canvas[y][x] = { shape: cellType, color: color };
+    this.updateVisuals();
+    this.app.tileCounter.update();
   }
-  
-  renderLibrary();
-  closeBlockEditor();
-});
 
-document.getElementById('cancelEdit').addEventListener('click', closeBlockEditor);
+  clearCanvas() {
+    const color = document.getElementById('canvas-cell-color').value;
+    this.app.state.boardState.canvas = Array.from({length: this.app.state.boardHeight}, () => 
+      Array.from({length: this.app.state.boardWidth}, () => ({ shape: 'pixel', color: color }))
+    );
+    this.app.state.boardState.blocks = [];
+    
+    document.querySelectorAll('.placed-block').forEach(block => block.remove());
+    
+    this.updateVisuals();
+    this.app.tileCounter.update();
+  }
 
-function closeBlockEditor() {
-  document.getElementById('blockEditor').style.display = 'none';
-  editingBlock = null;
-  selectedLibraryBlock = null;
+  placeBlock(x, y, blockData) {
+    const canvas = this.app.libraryRenderer.renderBlockToCanvas(blockData);
+    canvas.className = 'placed-block';
+    canvas.style.left = `${x * CONFIG.cellSize}px`;
+    canvas.style.top = `${y * CONFIG.cellSize}px`;
+    canvas.draggable = true;
+    canvas.dataset.gridX = x;
+    canvas.dataset.gridY = y;
+    
+    this.boardContainer.appendChild(canvas);
+    this.app.state.boardState.blocks.push({ 
+      x, y, 
+      width: blockData.width, 
+      height: blockData.height, 
+      cells: blockData.cells 
+    });
+
+    canvas.addEventListener('dragstart', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      this.app.state.draggedData = {
+        source: 'board',
+        blockData: blockData,
+        offsetX: e.clientX - rect.left,
+        offsetY: e.clientY - rect.top
+      };
+      
+      const idx = this.app.state.boardState.blocks.findIndex(b => b.x === x && b.y === y);
+      if (idx >= 0) this.app.state.boardState.blocks.splice(idx, 1);
+      this.boardContainer.removeChild(canvas);
+      this.app.tileCounter.update();
+    });
+  }
+
+  isOverlapping(gridX, gridY, blockData) {
+    return this.app.state.boardState.blocks.some(block =>
+      gridX < block.x + block.width &&
+      gridX + blockData.width > block.x &&
+      gridY < block.y + block.height &&
+      gridY + blockData.height > block.y
+    );
+  }
+
+  addBlockToCanvas(blockData) {
+    let placed = false;
+    for (let y = 0; y <= this.app.state.boardHeight - blockData.height && !placed; y++) {
+      for (let x = 0; x <= this.app.state.boardWidth - blockData.width && !placed; x++) {
+        if (!this.isOverlapping(x, y, blockData)) {
+          this.placeBlock(x, y, blockData);
+          placed = true;
+          this.app.tileCounter.update();
+        }
+      }
+    }
+    if (!placed) {
+      alert('No space available to place this block');
+    }
+  }
+
+  setupEventListeners() {
+    // Drop functionality
+    this.boardContainer.addEventListener('dragover', e => e.preventDefault());
+    this.boardContainer.addEventListener('drop', (e) => {
+      e.preventDefault();
+      if (!this.app.state.draggedData) return;
+      
+      const rect = this.boardContainer.getBoundingClientRect();
+      const dropX = Math.floor((e.clientX - rect.left - this.app.state.draggedData.offsetX) / CONFIG.cellSize);
+      const dropY = Math.floor((e.clientY - rect.top - this.app.state.draggedData.offsetY) / CONFIG.cellSize);
+      const blockData = this.app.state.draggedData.blockData;
+      
+      if (
+        dropX < 0 || dropX + blockData.width > this.app.state.boardWidth ||
+        dropY < 0 || dropY + blockData.height > this.app.state.boardHeight
+      ) {
+        this.app.state.draggedData = null;
+        return;
+      }
+      
+      if (this.isOverlapping(dropX, dropY, blockData)) {
+        alert('Block overlaps another.');
+        this.app.state.draggedData = null;
+        return;
+      }
+      
+      this.placeBlock(dropX, dropY, this.app.state.draggedData.blockData);
+      this.app.state.draggedData = null;
+      this.app.tileCounter.update();
+    });
+
+    // Board controls
+    document.getElementById('generate-board').addEventListener('click', () => this.generate());
+    document.getElementById('clear-main-canvas').addEventListener('click', () => this.clearCanvas());
+  }
 }
+
+// === BLOCK EDITOR ===
+class BlockEditor {
+  constructor(app) {
+    this.app = app;
+    this.editorContainer = document.getElementById('block-editor');
+    this.editCanvas = document.getElementById('edit-canvas');
+    this.setupEventListeners();
+  }
+
+  openNew() {
+    const width = Math.max(1, Math.min(20, parseInt(document.getElementById('edit-block-width').value) || 3));
+    const height = Math.max(1, Math.min(20, parseInt(document.getElementById('edit-block-height').value) || 5));
+    
+    this.app.state.editingBlock = {
+      id: `block_${Date.now()}`,
+      width: width,
+      height: height,
+      cells: Array.from({length: height}, () => 
+        Array.from({length: width}, () => ({ shape: 'pixel', color: '#cccccc' }))
+      )
+    };
+    this.open();
+  }
+
+  openExisting() {
+    if (this.app.state.selectedLibraryBlock === null) {
+      alert('Please select a block to edit first');
+      return;
+    }
+    this.app.state.editingBlock = JSON.parse(JSON.stringify(this.app.state.libraryBlocks[this.app.state.selectedLibraryBlock]));
+    this.open();
+  }
+
+  open() {
+    this.editorContainer.style.display = 'block';
+    document.getElementById('editing-block-id').textContent = this.app.state.editingBlock.id;
+    document.getElementById('block-id').value = this.app.state.editingBlock.id;
+    document.getElementById('edit-block-width').value = this.app.state.editingBlock.width;
+    document.getElementById('edit-block-height').value = this.app.state.editingBlock.height;
+    this.renderEditCanvas();
+  }
+
+  close() {
+    this.editorContainer.style.display = 'none';
+    this.app.state.editingBlock = null;
+    this.app.state.selectedLibraryBlock = null;
+  }
+
+  renderEditCanvas() {
+    this.editCanvas.innerHTML = '';
+    this.editCanvas.style.width = `${this.app.state.editingBlock.width * CONFIG.editCellSize}px`;
+    this.editCanvas.style.height = `${this.app.state.editingBlock.height * CONFIG.editCellSize}px`;
+    this.editCanvas.style.display = 'grid';
+    this.editCanvas.style.gridTemplateColumns = `repeat(${this.app.state.editingBlock.width}, ${CONFIG.editCellSize}px)`;
+    this.editCanvas.style.gridTemplateRows = `repeat(${this.app.state.editingBlock.height}, ${CONFIG.editCellSize}px)`;
+
+    this.app.state.editingBlock.cells.forEach((row, y) => {
+      row.forEach((cell, x) => {
+        const cellDiv = Utils.createElement('div', 'edit-cell');
+        cellDiv.style.width = `${CONFIG.editCellSize}px`;
+        cellDiv.style.height = `${CONFIG.editCellSize}px`;
+        cellDiv.dataset.x = x;
+        cellDiv.dataset.y = y;
+        
+        const canvas = Utils.createElement('canvas');
+        canvas.width = CONFIG.editCellSize;
+        canvas.height = CONFIG.editCellSize;
+        canvas.style.width = '100%';
+        canvas.style.height = '100%';
+        canvas.style.pointerEvents = 'none';
+        
+        const ctx = canvas.getContext('2d');
+        Utils.drawCell(ctx, 0, 0, CONFIG.editCellSize, CONFIG.editCellSize, cell.shape, cell.color);
+        
+        cellDiv.appendChild(canvas);
+        cellDiv.addEventListener('click', () => this.editCell(x, y));
+        this.editCanvas.appendChild(cellDiv);
+      });
+    });
+  }
+
+  editCell(x, y) {
+    const cellType = this.app.editorTileSelector.getSelectedType();
+    const color = document.getElementById('cell-color').value;
+    
+    this.app.state.editingBlock.cells[y][x] = { shape: cellType, color: color };
+    this.renderEditCanvas();
+  }
+
+  resize() {
+    if (!this.app.state.editingBlock) return;
+    
+    const newWidth = Math.max(CONFIG.minBlockSize, Math.min(CONFIG.maxBlockSize, parseInt(document.getElementById('edit-block-width').value)));
+    const newHeight = Math.max(CONFIG.minBlockSize, Math.min(CONFIG.maxBlockSize, parseInt(document.getElementById('edit-block-height').value)));
+    
+    const newCells = Array.from({length: newHeight}, (_, row) =>
+      Array.from({length: newWidth}, (_, col) => {
+        if (row < this.app.state.editingBlock.height && 
+            col < this.app.state.editingBlock.width && 
+            this.app.state.editingBlock.cells[row] && 
+            this.app.state.editingBlock.cells[row][col]) {
+          return this.app.state.editingBlock.cells[row][col];
+        }
+        return { shape: 'pixel', color: '#cccccc' };
+      })
+    );
+    
+    this.app.state.editingBlock.width = newWidth;
+    this.app.state.editingBlock.height = newHeight;
+    this.app.state.editingBlock.cells = newCells;
+    this.renderEditCanvas();
+  }
+
+  clear() {
+    const color = "#FFFFFF";
+    this.app.state.editingBlock.cells = Array.from({length: this.app.state.editingBlock.height}, () => 
+      Array.from({length: this.app.state.editingBlock.width}, () => ({ shape: 'pixel', color: color }))
+    );
+    this.renderEditCanvas();
+  }
+
+  save() {
+    const newId = document.getElementById('block-id').value.trim();
+    if (!newId) {
+      alert('Please enter a block ID');
+      return;
+    }
+    
+    this.app.state.editingBlock.id = newId;
+    
+    if (this.app.state.selectedLibraryBlock !== null) {
+      this.app.state.libraryBlocks[this.app.state.selectedLibraryBlock] = this.app.state.editingBlock;
+    } else {
+      this.app.state.libraryBlocks.push(this.app.state.editingBlock);
+    }
+    
+    this.app.libraryRenderer.render();
+    this.close();
+  }
+
+  delete() {
+    if (this.app.state.selectedLibraryBlock === null) {
+      alert('Please select a block to delete first');
+      return;
+    }
+    
+    this.app.state.libraryBlocks.splice(this.app.state.selectedLibraryBlock, 1);
+    this.app.state.selectedLibraryBlock = null;
+    this.app.libraryRenderer.render();
+  }
+
+  setupEventListeners() {
+    document.getElementById('new-block').addEventListener('click', () => this.openNew());
+    document.getElementById('edit-block').addEventListener('click', () => this.openExisting());
+    document.getElementById('delete-block').addEventListener('click', () => this.delete());
+    document.getElementById('resize-block').addEventListener('click', () => this.resize());
+    document.getElementById('clear-canvas').addEventListener('click', () => this.clear());
+    document.getElementById('save-block-edit').addEventListener('click', () => this.save());
+    document.getElementById('cancel-edit').addEventListener('click', () => this.close());
+  }
+}
+
+// === TILE COUNTER ===
+class TileCounter {
+  constructor(app) {
+    this.app = app;
+    this.display = document.getElementById('count-display');
+  }
+
+  update() {
+    const counts = Utils.countTiles(this.app.state.boardState);
+    this.display.innerHTML = '';
+    
+    if (Object.keys(counts).length === 0) {
+      this.display.innerHTML = '<div>No tiles to count</div>';
+      return;
+    }
+    
+    Object.entries(counts).forEach(([key, count]) => {
+      const [shape, color] = key.split('|');
+      const item = Utils.createElement('div', 'count-item');
+      
+      const colorDiv = Utils.createElement('div', 'count-color');
+      colorDiv.style.backgroundColor = color;
+      
+      const text = Utils.createElement('span');
+      text.textContent = `${shape}: ${count}`;
+      
+      item.appendChild(colorDiv);
+      item.appendChild(text);
+      this.display.appendChild(item);
+    });
+  }
+}
+
+// === TEXT INPUT HANDLER ===
+class TextInputHandler {
+  constructor(app) {
+    this.app = app;
+    this.textbox = document.getElementById('library-textbox');
+    this.setupEventListeners();
+  }
+
+  setupEventListeners() {
+    this.textbox.addEventListener('input', () => {
+      const currentText = this.textbox.value.toUpperCase();
+      if (currentText.length > 0) {
+        const input = currentText[currentText.length - 1];
+        this.app.state.libraryBlocks.forEach(block => {
+          if (input === block.id) {
+            this.app.boardManager.addBlockToCanvas(block);
+          }
+        });
+      }
+      this.textbox.value = "";
+    });
+  }
+}
+
+// === SAVE/LOAD MANAGER ===
+class SaveLoadManager {
+  constructor(app) {
+    this.app = app;
+    this.boardJson = document.getElementById('board-json');
+    this.libraryJson = document.getElementById('library-json');
+    this.setupEventListeners();
+  }
+
+  saveBoard() {
+    this.boardJson.value = JSON.stringify(this.app.state.boardState, null, 2);
+  }
+
+  loadBoard() {
+    try {
+      const data = JSON.parse(this.boardJson.value);
+      
+      document.getElementById('board-width').value = data.width / 16;
+      document.getElementById('board-height').value = data.height / 16;
+      
+      if (data.canvas) {
+        this.app.state.boardState.canvas = data.canvas;
+      }
+      
+      this.app.boardManager.generate();
+      
+      if (data.blocks) {
+        data.blocks.forEach(block => {
+          this.app.boardManager.placeBlock(block.x, block.y, { 
+            width: block.width, 
+            height: block.height, 
+            cells: block.cells 
+          });
+        });
+      }
+      
+      this.app.boardManager.updateVisuals();
+      this.app.tileCounter.update();
+    } catch (e) {
+      alert('Invalid JSON');
+    }
+  }
+
+  saveLibrary() {
+    this.libraryJson.value = JSON.stringify(this.app.state.libraryBlocks, null, 2);
+  }
+
+  loadLibrary() {
+    try {
+      const data = JSON.parse(this.libraryJson.value);
+      this.app.state.libraryBlocks = data;
+      this.app.libraryRenderer.render();
+      this.app.state.selectedLibraryBlock = null;
+    } catch (e) {
+      alert('Invalid Library JSON');
+    }
+  }
+
+  setupEventListeners() {
+    document.getElementById('save-board').addEventListener('click', () => this.saveBoard());
+    document.getElementById('load-board').addEventListener('click', () => this.loadBoard());
+    document.getElementById('save-library').addEventListener('click', () => this.saveLibrary());
+    document.getElementById('load-library').addEventListener('click', () => this.loadLibrary());
+  }
+}
+
+// === MAIN APPLICATION ===
+class AlphaPixApp {
+  constructor() {
+    this.state = new AppState();
+    this.init();
+  }
+
+  async init() {
+    // Initialize all managers
+    this.fontManager = new FontManager(this);
+    this.libraryRenderer = new LibraryRenderer(this);
+    this.boardManager = new BoardManager(this);
+    this.blockEditor = new BlockEditor(this);
+    this.tileCounter = new TileCounter(this);
+    this.textInputHandler = new TextInputHandler(this);
+    this.saveLoadManager = new SaveLoadManager(this);
+    
+    // Initialize color palettes
+    this.editorPalette = new ColorPalette('editor-palette', 'cell-color');
+    this.canvasPalette = new ColorPalette('canvas-palette', 'canvas-cell-color');
+    
+    // Initialize tile type selectors
+    this.editorTileSelector = new TileTypeSelector('editor-tile-selector');
+    this.canvasTileSelector = new TileTypeSelector('canvas-tile-selector');
+    
+    // Generate initial board
+    this.boardManager.generate();
+  }
+}
+
+// === INITIALIZATION ===
+document.addEventListener('DOMContentLoaded', () => {
+  window.alphaPixApp = new AlphaPixApp();
+});
 
 </script>
 
