@@ -156,8 +156,8 @@
     box-sizing: border-box;
     cursor: crosshair;
     border-radius: 4px;
-    line-height: 0; /* Remove any line-height spacing */
-    font-size: 0; /* Remove font-size spacing */
+    line-height: 0;
+    font-size: 0;
   }
 
   .grid-cell {
@@ -369,9 +369,6 @@
           <div class="color-palette" id="editor-palette"></div>
         </div>
       </div>
-      
-
-      
       <div class="control-row" style="margin-top: 15px;">
         <button id="clear-canvas">Clear All</button>
         <button id="save-block-edit">Save Block</button>
@@ -401,14 +398,11 @@
     <h3>Board Controls</h3>
     <div class="control-row">
       <label>Board Size:</label>
-      <input type="number" id="board-height" value="2" min="8" max="128"> ×
-      <input type="number" id="board-width" value="2" min="8" max="128">
+      <input type="number" id="board-height" value="2" min="1" max="8"> ×
+      <input type="number" id="board-width" value="2" min="1" max="8">
       <button id="generate-board">Resize</button>
       <button id="clear-main-canvas">Fill Canvas</button>
-    </div>
-    <div class="control-group">
-      <label>Add Letters:</label>
-      <input type="text" id="library-textbox" placeholder="Type letters here...">
+      <button id="add-border">Add Border</button>
     </div>
   </div>
 
@@ -419,6 +413,7 @@
         <label><strong>Tile Type:</strong></label>
         <div class="tile-type-selector" id="canvas-tile-selector"></div>
       </div>
+      <br>
       <div>
         <label><strong>Color:</strong></label>
         <input type="color" id="canvas-cell-color" value="#cccccc">
@@ -443,7 +438,7 @@
 </div>
 
 <script>
-// === CONSTANTS AND CONFIGURATION ===
+// === GLOBAL VARIABLES ===
 const CONFIG = {
   cellSize: 15,
   editCellSize: 40,
@@ -453,983 +448,969 @@ const CONFIG = {
   minBlockSize: 1
 };
 
-// Standard color palette
 const COLOR_PALETTE = [
-  '#ff0000', '#CCCCCC', "#808080", "#000000", "#FFFFFF"
+  '#ff0000', '#CCCCCC', "#808080", "#000000", "#FFFFFF",
+  "#078bc9", "#ff698f", "#e1d5ed", "#4b9f4a", "#f2cd37"
 ];
 
-// === STATE MANAGEMENT ===
-class AppState {
-  constructor() {
-    this.boardWidth = 32;
-    this.boardHeight = 32;
-    this.draggedData = null;
-    this.libraryBlocks = [];
-    this.availableFonts = [];
-    this.currentFont = '';
-    this.selectedLibraryBlock = null;
-    this.editingBlock = null;
-    this.boardState = {
-      width: this.boardWidth,
-      height: this.boardHeight,
-      blocks: [],
-      canvas: []
-    };
-  }
+let boardWidth = 32;
+let boardHeight = 32;
+let draggedData = null;
+let libraryBlocks = [];
+let availableFonts = [];
+let currentFont = '';
+let selectedLibraryBlock = null;
+let editingBlock = null;
+let boardState = {
+  width: 32,
+  height: 32,
+  blocks: [],
+  canvas: []
+};
 
-  setBoardSize(width, height) {
-    this.boardWidth = width;
-    this.boardHeight = height;
-    this.boardState.width = width;
-    this.boardState.height = height;
-  }
-
-  initializeCanvas() {
-    this.boardState.canvas = Array.from({length: this.boardHeight}, () => 
-      Array.from({length: this.boardWidth}, () => ({ shape: 'pixel', color: '#ffffff' }))
-    );
-  }
-
-  clearBoard() {
-    this.boardState.blocks = [];
-    this.initializeCanvas();
-  }
-}
+let editorSelectedType = 'pixel';
+let canvasSelectedType = 'pixel';
+let editorSelectedElement = null;
+let canvasSelectedElement = null;
 
 // === UTILITY FUNCTIONS ===
-class Utils {
-  static drawCell(ctx, x, y, cellWidth, cellHeight, shape, color) {
-    ctx.fillStyle = color;
-    if (shape === 'pixel') {
-      ctx.fillRect(x, y, cellWidth, cellHeight);
-      return;
-    }
-
-    ctx.beginPath();
-    const radius = Math.min(cellWidth, cellHeight) / 1;
-    
-    switch (shape) {
-      case 'tl':
-        ctx.moveTo(x + radius, y);
-        ctx.arc(x + radius, y + radius, radius, 1.5 * Math.PI, Math.PI, true);
-        ctx.lineTo(x, y + cellHeight);
-        ctx.lineTo(x + cellWidth, y + cellHeight);
-        ctx.lineTo(x + cellWidth, y);
-        break;
-      case 'tr':
-        ctx.moveTo(x + cellWidth - radius, y);
-        ctx.arc(x + cellWidth - radius, y + radius, radius, 1.5 * Math.PI, 0, false);
-        ctx.lineTo(x + cellWidth, y + cellHeight);
-        ctx.lineTo(x, y + cellHeight);
-        ctx.lineTo(x, y);
-        break;
-      case 'bl':
-        ctx.moveTo(x, y + cellHeight - radius);
-        ctx.arc(x + radius, y + cellHeight - radius, radius, Math.PI, 0.5 * Math.PI, true);
-        ctx.lineTo(x + cellWidth, y + cellHeight);
-        ctx.lineTo(x + cellWidth, y);
-        ctx.lineTo(x, y);
-        break;
-      case 'br':
-        ctx.moveTo(x + cellWidth - radius, y + cellHeight);
-        ctx.arc(x + cellWidth - radius, y + cellHeight - radius, radius, 0.5 * Math.PI, 0, true);
-        ctx.lineTo(x + cellWidth, y);
-        ctx.lineTo(x, y);
-        ctx.lineTo(x, y + cellHeight);
-        break;
-    }
-    ctx.closePath();
-    ctx.fill();
+function drawCell(ctx, x, y, cellWidth, cellHeight, shape, color) {
+  ctx.fillStyle = color;
+  if (shape === 'pixel') {
+    ctx.fillRect(x, y, cellWidth, cellHeight);
+    return;
   }
 
-  static createElement(tag, className = '', attributes = {}) {
-    const element = document.createElement(tag);
-    if (className) element.className = className;
-    Object.entries(attributes).forEach(([key, value]) => {
-      element.setAttribute(key, value);
-    });
-    return element;
+  ctx.beginPath();
+  const radius = Math.min(cellWidth, cellHeight) / 1;
+  
+  switch (shape) {
+    case 'tl':
+      ctx.moveTo(x + radius, y);
+      ctx.arc(x + radius, y + radius, radius, 1.5 * Math.PI, Math.PI, true);
+      ctx.lineTo(x, y + cellHeight);
+      ctx.lineTo(x + cellWidth, y + cellHeight);
+      ctx.lineTo(x + cellWidth, y);
+      break;
+    case 'tr':
+      ctx.moveTo(x + cellWidth - radius, y);
+      ctx.arc(x + cellWidth - radius, y + radius, radius, 1.5 * Math.PI, 0, false);
+      ctx.lineTo(x + cellWidth, y + cellHeight);
+      ctx.lineTo(x, y + cellHeight);
+      ctx.lineTo(x, y);
+      break;
+    case 'bl':
+      ctx.moveTo(x, y + cellHeight - radius);
+      ctx.arc(x + radius, y + cellHeight - radius, radius, Math.PI, 0.5 * Math.PI, true);
+      ctx.lineTo(x + cellWidth, y + cellHeight);
+      ctx.lineTo(x + cellWidth, y);
+      ctx.lineTo(x, y);
+      break;
+    case 'br':
+      ctx.moveTo(x + cellWidth - radius, y + cellHeight);
+      ctx.arc(x + cellWidth - radius, y + cellHeight - radius, radius, 0.5 * Math.PI, 0, true);
+      ctx.lineTo(x + cellWidth, y);
+      ctx.lineTo(x, y);
+      ctx.lineTo(x, y + cellHeight);
+      break;
   }
-
-  static countTiles(boardState) {
-    const counts = {};
-
-    // Count canvas cells
-    if (boardState.canvas && Array.isArray(boardState.canvas)) {
-      boardState.canvas.forEach(row => {
-        if (Array.isArray(row)) {
-          row.forEach(cell => {
-            if (cell && cell.color && cell.color !== '#ffffff') {
-              const tile = ['tl','tr','bl','br'].includes(cell.shape) ? 'Quarter' : cell.shape;
-              const key = `${tile}|${cell.color}`;
-              counts[key] = (counts[key] || 0) + 1;
-            }
-          });
-        }
-      });
-    }
-
-    // Count block cells
-    if (boardState.blocks && Array.isArray(boardState.blocks)) {
-      boardState.blocks.forEach(block => {
-        if (block.cells && Array.isArray(block.cells)) {
-          block.cells.forEach(row => {
-            if (Array.isArray(row)) {
-              row.forEach(cell => {
-                if (cell && cell.color && cell.shape) {
-                  const tile = ['tl','tr','bl','br'].includes(cell.shape) ? 'Quarter' : cell.shape;
-                  const key = `${tile}|${cell.color}`;
-                  counts[key] = (counts[key] || 0) + 1;
-                }
-              });
-            }
-          });
-        }
-      });
-    }
-
-    return counts;
-  }
+  ctx.closePath();
+  ctx.fill();
 }
 
-// === TILE TYPE SELECTOR ===
-class TileTypeSelector {
-  constructor(containerId, defaultType = 'pixel') {
-    this.container = document.getElementById(containerId);
-    this.selectedType = defaultType;
-    this.selectedElement = null;
-    this.tileTypes = [
-      { value: 'pixel', label: 'Pixel' },
-      { value: 'tl', label: 'Top-Left' },
-      { value: 'tr', label: 'Top-Right' },
-      { value: 'bl', label: 'Bottom-Left' },
-      { value: 'br', label: 'Bottom-Right' }
-    ];
-    this.init();
-  }
-
-  init() {
-    this.render();
-  }
-
-  render() {
-    this.container.innerHTML = '';
-    
-    this.tileTypes.forEach(tileType => {
-      const wrapper = Utils.createElement('div');
-      wrapper.style.textAlign = 'center';
-      
-      const option = Utils.createElement('div', 'tile-type-option');
-      option.dataset.tileType = tileType.value;
-      
-      // Create preview canvas
-      const canvas = Utils.createElement('canvas');
-      canvas.width = 30;
-      canvas.height = 30;
-      const ctx = canvas.getContext('2d');
-      
-      // Draw preview of the tile type
-      Utils.drawCell(ctx, 5, 5, 20, 20, tileType.value, '#666666');
-      
-      option.appendChild(canvas);
-      
-      const label = Utils.createElement('div', 'tile-type-label');
-      label.textContent = tileType.label;
-      
-      wrapper.appendChild(option);
-      wrapper.appendChild(label);
-      
-      option.addEventListener('click', () => this.selectType(tileType.value, option));
-      
-      // Set default selection
-      if (tileType.value === this.selectedType) {
-        this.selectType(tileType.value, option);
-      }
-      
-      this.container.appendChild(wrapper);
-    });
-  }
-
-  selectType(type, element) {
-    // Remove previous selection
-    if (this.selectedElement) {
-      this.selectedElement.classList.remove('selected');
-    }
-    
-    // Set new selection
-    element.classList.add('selected');
-    this.selectedElement = element;
-    this.selectedType = type;
-  }
-
-  getSelectedType() {
-    return this.selectedType;
-  }
-
-  updatePreview() {
-    // Re-render with current color if needed
-    this.render();
-  }
-}
-class ColorPalette {
-  constructor(containerId, colorInputId) {
-    this.container = document.getElementById(containerId);
-    this.colorInput = document.getElementById(colorInputId);
-    this.selectedSwatch = null;
-    this.init();
-  }
-
-  init() {
-    this.render();
-    this.setupEventListeners();
-  }
-
-  render() {
-    this.container.innerHTML = '';
-    COLOR_PALETTE.forEach(color => {
-      const swatch = Utils.createElement('div', 'color-swatch');
-      swatch.style.backgroundColor = color;
-      swatch.dataset.color = color;
-      swatch.addEventListener('click', () => this.selectColor(color, swatch));
-      this.container.appendChild(swatch);
-    });
-  }
-
-  selectColor(color, swatch) {
-    if (this.selectedSwatch) {
-      this.selectedSwatch.classList.remove('selected');
-    }
-    swatch.classList.add('selected');
-    this.selectedSwatch = swatch;
-    this.colorInput.value = color;
-  }
-
-  setupEventListeners() {
-    this.colorInput.addEventListener('change', (e) => {
-      const color = e.target.value;
-      // Remove selection from palette if custom color is chosen
-      if (this.selectedSwatch) {
-        this.selectedSwatch.classList.remove('selected');
-        this.selectedSwatch = null;
-      }
-    });
-  }
+function createElement(tag, className = '', attributes = {}) {
+  const element = document.createElement(tag);
+  if (className) element.className = className;
+  Object.entries(attributes).forEach(([key, value]) => {
+    element.setAttribute(key, value);
+  });
+  return element;
 }
 
-// === FONT MANAGER ===
-class FontManager {
-  constructor(app) {
-    this.app = app;
-    this.fontSelector = document.getElementById('font-selector');
-    this.init();
-  }
+function countTiles(boardState) {
+  const counts = {};
 
-  async init() {
-    await this.loadAvailableFonts();
-    this.setupEventListeners();
-  }
-
-  async loadAvailableFonts() {
-    try {
-      const possibleFonts = ['04.json','06.json','07+ShadowDown.json','07.json','08.json','10+2xShadownLeft.json'];
-      this.app.state.availableFonts = [];
-      
-      for (const font of possibleFonts) {
-        try {
-          const response = await fetch(`fonts/${font}`);
-          if (response.ok) {
-            this.app.state.availableFonts.push(font);
+  // Count canvas cells
+  if (boardState.canvas && Array.isArray(boardState.canvas)) {
+    boardState.canvas.forEach(row => {
+      if (Array.isArray(row)) {
+        row.forEach(cell => {
+          if (cell && cell.color && cell.color !== '#ffffff') {
+            const tile = ['tl','tr','bl','br'].includes(cell.shape) ? 'Quarter' : cell.shape;
+            const key = `${tile}|${cell.color}`;
+            counts[key] = (counts[key] || 0) + 1;
           }
-        } catch (e) {
-          // Font doesn't exist, skip
-        }
-      }
-      
-      this.populateFontSelector();
-    } catch (error) {
-      console.error('Error loading fonts:', error);
-      this.fontSelector.innerHTML = '<option value="">Error loading fonts</option>';
-    }
-  }
-
-  populateFontSelector() {
-    this.fontSelector.innerHTML = '';
-    if (this.app.state.availableFonts.length === 0) {
-      this.fontSelector.innerHTML = '<option value="">No fonts found</option>';
-    } else {
-      this.fontSelector.innerHTML = '<option value="">Select a font...</option>';
-      this.app.state.availableFonts.forEach(font => {
-        const option = Utils.createElement('option', '', { value: font });
-        option.textContent = font.replace('.json', '');
-        this.fontSelector.appendChild(option);
-      });
-      
-      if (this.app.state.availableFonts.length > 0) {
-        this.fontSelector.value = this.app.state.availableFonts[0];
-        this.loadFont(this.app.state.availableFonts[0]);
-      }
-    }
-  }
-
-  async loadFont(fontFile) {
-    if (!fontFile) return;
-    
-    try {
-      const response = await fetch(`fonts/${fontFile}`);
-      if (!response.ok) throw new Error('Font file not found');
-      
-      const fontData = await response.json();
-      this.app.state.libraryBlocks = [];
-      
-      fontData.forEach(block => {
-        const exists = this.app.state.libraryBlocks.some(b => b.id === block.id);
-        if (!exists) {
-          this.app.state.libraryBlocks.push(block);
-        }
-      });
-      
-      this.app.libraryRenderer.render();
-      this.app.state.currentFont = fontFile;
-    } catch (error) {
-      console.error('Error loading font:', error);
-      alert(`Error loading font: ${fontFile}`);
-    }
-  }
-
-  setupEventListeners() {
-    this.fontSelector.addEventListener('change', (e) => {
-      if (e.target.value) {
-        this.loadFont(e.target.value);
-      }
-    });
-  }
-}
-
-// === LIBRARY RENDERER ===
-class LibraryRenderer {
-  constructor(app) {
-    this.app = app;
-    this.libraryContainer = document.getElementById('library');
-    this.filterInput = document.getElementById('filter-input');
-    this.filterType = document.getElementById('filter-type');
-    this.setupEventListeners();
-  }
-
-  render() {
-    this.libraryContainer.innerHTML = '';
-    this.app.state.libraryBlocks.forEach((block, index) => {
-      const canvas = this.renderBlockToCanvas(block);
-      canvas.draggable = true;
-      canvas.dataset.blockIndex = index;
-      canvas.title = `Block: ${block.id}`;
-      
-      canvas.addEventListener('click', (e) => {
-        e.preventDefault();
-        this.selectBlock(index, canvas);
-      });
-      
-      canvas.addEventListener('dragstart', (e) => {
-        const rect = canvas.getBoundingClientRect();
-        this.app.state.draggedData = {
-          source: 'library',
-          blockData: JSON.parse(JSON.stringify(block)),
-          offsetX: e.clientX - rect.left,
-          offsetY: e.clientY - rect.top
-        };
-      });
-      
-      this.libraryContainer.appendChild(canvas);
-    });
-    
-    this.applyFilter();
-  }
-
-  renderBlockToCanvas(blockData) {
-    const canvas = Utils.createElement('canvas', 'block');
-    const displayWidth = blockData.width * CONFIG.cellSize;
-    const displayHeight = blockData.height * CONFIG.cellSize;
-    
-    canvas.style.width = displayWidth + 'px';
-    canvas.style.height = displayHeight + 'px';
-    canvas.width = displayWidth;
-    canvas.height = displayHeight;
-    
-    const ctx = canvas.getContext('2d');
-    const cellWidth = displayWidth / blockData.width;
-    const cellHeight = displayHeight / blockData.height;
-    
-    blockData.cells.forEach((row, y) => {
-      row.forEach((cell, x) => {
-        Utils.drawCell(ctx, x * cellWidth, y * cellHeight, cellWidth, cellHeight, cell.shape, cell.color);
-      });
-    });
-    
-    return canvas;
-  }
-
-  selectBlock(index, canvas) {
-    document.querySelectorAll('.block').forEach(b => b.classList.remove('selected'));
-    canvas.classList.add('selected');
-    this.app.state.selectedLibraryBlock = index;
-  }
-
-  applyFilter() {
-    const filterText = this.filterInput.value.toLowerCase().trim();
-    const filterBy = this.filterType.value;
-    const blocks = this.libraryContainer.querySelectorAll('.block');
-    
-    blocks.forEach((block, index) => {
-      const blockData = this.app.state.libraryBlocks[index];
-      if (!blockData) return;
-      
-      let shouldShow = filterText === '';
-      
-      if (!shouldShow) {
-        switch (filterBy) {
-          case 'id':
-            shouldShow = blockData.id.toLowerCase().includes(filterText);
-            break;
-          case 'width':
-            shouldShow = blockData.width.toString().includes(filterText);
-            break;
-          case 'height':
-            shouldShow = blockData.height.toString().includes(filterText);
-            break;
-        }
-      }
-      
-      block.classList.toggle('hidden', !shouldShow);
-    });
-  }
-
-  setupEventListeners() {
-    this.filterInput.addEventListener('input', () => this.applyFilter());
-    this.filterType.addEventListener('change', () => {
-      const filterBy = this.filterType.value;
-      const placeholders = {
-        id: 'Filter by ID...',
-        width: 'Filter by width (e.g., 3)...',
-        height: 'Filter by height (e.g., 5)...'
-      };
-      this.filterInput.placeholder = placeholders[filterBy] || 'Filter...';
-      this.applyFilter();
-    });
-  }
-}
-
-// === BOARD MANAGER ===
-class BoardManager {
-  constructor(app) {
-    this.app = app;
-    this.boardContainer = document.getElementById('board');
-    this.setupEventListeners();
-  }
-
-  generate() {
-    const widthInput = document.getElementById('board-width');
-    const heightInput = document.getElementById('board-height');
-    
-    const newWidth = Math.max(CONFIG.minBoardSize, Math.min(CONFIG.maxBoardSize, parseInt(widthInput.value) * 16));
-    const newHeight = Math.max(CONFIG.minBoardSize, Math.min(CONFIG.maxBoardSize, parseInt(heightInput.value) * 16));
-    
-    this.app.state.setBoardSize(newWidth, newHeight);
-    this.app.state.clearBoard();
-    this.app.state.initializeCanvas();
-    
-    this.renderGrid();
-    this.updateVisuals();
-    this.app.tileCounter.update();
-  }
-
-  renderGrid() {
-    this.boardContainer.innerHTML = '';
-    this.boardContainer.style.width = `${this.app.state.boardWidth * CONFIG.cellSize}px`;
-    this.boardContainer.style.height = `${this.app.state.boardHeight * CONFIG.cellSize}px`;
-    this.boardContainer.style.gridTemplateColumns = `repeat(${this.app.state.boardWidth}, ${CONFIG.cellSize}px)`;
-    this.boardContainer.style.gridTemplateRows = `repeat(${this.app.state.boardHeight}, ${CONFIG.cellSize}px)`;
-    this.boardContainer.style.gap = '0'; // Ensure no gaps between cells
-
-    for (let row = 0; row < this.app.state.boardHeight; row++) {
-      for (let col = 0; col < this.app.state.boardWidth; col++) {
-        const cell = Utils.createElement('div', 'grid-cell');
-        cell.dataset.row = row;
-        cell.dataset.col = col;
-        
-        cell.addEventListener('click', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          this.editCanvasCell(col, row);
         });
-        
-        this.boardContainer.appendChild(cell);
+      }
+    });
+  }
+
+  // Count block cells
+  if (boardState.blocks && Array.isArray(boardState.blocks)) {
+    boardState.blocks.forEach(block => {
+      if (block.cells && Array.isArray(block.cells)) {
+        block.cells.forEach(row => {
+          if (Array.isArray(row)) {
+            row.forEach(cell => {
+              if (cell && cell.color && cell.shape) {
+                const tile = ['tl','tr','bl','br'].includes(cell.shape) ? 'Quarter' : cell.shape;
+                const key = `${tile}|${cell.color}`;
+                counts[key] = (counts[key] || 0) + 1;
+              }
+            });
+          }
+        });
+      }
+    });
+  }
+
+  return counts;
+}
+
+// === TILE TYPE SELECTOR FUNCTIONS ===
+function initTileTypeSelector(containerId, selectedTypeVar, selectedElementVar) {
+  const container = document.getElementById(containerId);
+  const tileTypes = [
+    { value: 'pixel', label: 'Pixel' },
+    { value: 'tl', label: 'Top-Left' },
+    { value: 'tr', label: 'Top-Right' },
+    { value: 'bl', label: 'Bottom-Left' },
+    { value: 'br', label: 'Bottom-Right' }
+  ];
+
+  container.innerHTML = '';
+  
+  tileTypes.forEach(tileType => {
+    const wrapper = createElement('div');
+    wrapper.style.textAlign = 'center';
+    
+    const option = createElement('div', 'tile-type-option');
+    option.dataset.tileType = tileType.value;
+    
+    const canvas = createElement('canvas');
+    canvas.width = 30;
+    canvas.height = 30;
+    const ctx = canvas.getContext('2d');
+    
+    drawCell(ctx, 5, 5, 20, 20, tileType.value, '#666666');
+    
+    option.appendChild(canvas);
+    
+    const label = createElement('div', 'tile-type-label');
+    label.textContent = tileType.label;
+    
+    wrapper.appendChild(option);
+    wrapper.appendChild(label);
+    
+    option.addEventListener('click', () => {
+      if (selectedElementVar === 'editor') {
+        if (editorSelectedElement) {
+          editorSelectedElement.classList.remove('selected');
+        }
+        option.classList.add('selected');
+        editorSelectedElement = option;
+        editorSelectedType = tileType.value;
+      } else {
+        if (canvasSelectedElement) {
+          canvasSelectedElement.classList.remove('selected');
+        }
+        option.classList.add('selected');
+        canvasSelectedElement = option;
+        canvasSelectedType = tileType.value;
+      }
+    });
+    
+    if (tileType.value === 'pixel') {
+      option.classList.add('selected');
+      if (selectedElementVar === 'editor') {
+        editorSelectedElement = option;
+      } else {
+        canvasSelectedElement = option;
       }
     }
-  }
-
-  updateVisuals() {
-    const cells = this.boardContainer.querySelectorAll('.grid-cell');
     
-    this.app.state.boardState.canvas.forEach((row, y) => {
-      row.forEach((cell, x) => {
-        const index = y * this.app.state.boardWidth + x;
-        const cellDiv = cells[index];
-        if (!cellDiv) return;
-        
-        let canvas = cellDiv.querySelector('canvas');
-        if (!canvas) {
-          canvas = Utils.createElement('canvas');
-          canvas.width = CONFIG.cellSize;
-          canvas.height = CONFIG.cellSize;
-          canvas.style.width = '100%';
-          canvas.style.height = '100%';
-          canvas.style.display = 'block';
-          canvas.style.pointerEvents = 'none';
-          cellDiv.appendChild(canvas);
+    container.appendChild(wrapper);
+  });
+}
+
+function getSelectedTileType(selector) {
+  return selector === 'editor' ? editorSelectedType : canvasSelectedType;
+}
+
+// === COLOR PALETTE FUNCTIONS ===
+function initColorPalette(containerId, colorInputId) {
+  const container = document.getElementById(containerId);
+  const colorInput = document.getElementById(colorInputId);
+  let selectedSwatch = null;
+
+  container.innerHTML = '';
+  COLOR_PALETTE.forEach(color => {
+    const swatch = createElement('div', 'color-swatch');
+    swatch.style.backgroundColor = color;
+    swatch.dataset.color = color;
+    swatch.addEventListener('click', () => {
+      if (selectedSwatch) {
+        selectedSwatch.classList.remove('selected');
+      }
+      swatch.classList.add('selected');
+      selectedSwatch = swatch;
+      colorInput.value = color;
+    });
+    container.appendChild(swatch);
+  });
+
+  colorInput.addEventListener('change', (e) => {
+    if (selectedSwatch) {
+      selectedSwatch.classList.remove('selected');
+      selectedSwatch = null;
+    }
+  });
+}
+
+// === FONT MANAGEMENT FUNCTIONS ===
+async function loadAvailableFonts() {
+  try {
+    const possibleFonts = ['04.json','06.json','07+ShadowDown.json','07.json','08.json','10+2xShadownLeft.json'];
+    availableFonts = [];
+    
+    for (const font of possibleFonts) {
+      try {
+        const response = await fetch(`fonts/${font}`);
+        if (response.ok) {
+          availableFonts.push(font);
         }
-        
-        const ctx = canvas.getContext('2d');
-        ctx.clearRect(0, 0, CONFIG.cellSize, CONFIG.cellSize);
-        Utils.drawCell(ctx, 0, 0, CONFIG.cellSize, CONFIG.cellSize, cell.shape, cell.color);
-      });
+      } catch (e) {
+        // Font doesn't exist, skip
+      }
+    }
+    
+    populateFontSelector();
+  } catch (error) {
+    console.error('Error loading fonts:', error);
+    document.getElementById('font-selector').innerHTML = '<option value="">Error loading fonts</option>';
+  }
+}
+
+function populateFontSelector() {
+  const fontSelector = document.getElementById('font-selector');
+  fontSelector.innerHTML = '';
+  if (availableFonts.length === 0) {
+    fontSelector.innerHTML = '<option value="">No fonts found</option>';
+  } else {
+    fontSelector.innerHTML = '<option value="">Select a font...</option>';
+    availableFonts.forEach(font => {
+      const option = createElement('option', '', { value: font });
+      option.textContent = font.replace('.json', '');
+      fontSelector.appendChild(option);
     });
-  }
-
-  editCanvasCell(x, y) {
-    const cellType = this.app.canvasTileSelector.getSelectedType();
-    const color = document.getElementById('canvas-cell-color').value;
     
-    this.app.state.boardState.canvas[y][x] = { shape: cellType, color: color };
-    this.updateVisuals();
-    this.app.tileCounter.update();
+    if (availableFonts.length > 0) {
+      fontSelector.value = availableFonts[0];
+      loadFont(availableFonts[0]);
+    }
   }
+}
 
-  clearCanvas() {
-    const color = document.getElementById('canvas-cell-color').value;
-    this.app.state.boardState.canvas = Array.from({length: this.app.state.boardHeight}, () => 
-      Array.from({length: this.app.state.boardWidth}, () => ({ shape: 'pixel', color: color }))
-    );
-    this.app.state.boardState.blocks = [];
+async function loadFont(fontFile) {
+  if (!fontFile) return;
+  
+  try {
+    const response = await fetch(`fonts/${fontFile}`);
+    if (!response.ok) throw new Error('Font file not found');
     
-    document.querySelectorAll('.placed-block').forEach(block => block.remove());
+    const fontData = await response.json();
+    libraryBlocks = [];
     
-    this.updateVisuals();
-    this.app.tileCounter.update();
+    fontData.forEach(block => {
+      const exists = libraryBlocks.some(b => b.id === block.id);
+      if (!exists) {
+        libraryBlocks.push(block);
+      }
+    });
+    
+    renderLibrary();
+    currentFont = fontFile;
+  } catch (error) {
+    console.error('Error loading font:', error);
+    alert(`Error loading font: ${fontFile}`);
   }
+}
 
-  placeBlock(x, y, blockData) {
-    const canvas = this.app.libraryRenderer.renderBlockToCanvas(blockData);
-    canvas.className = 'placed-block';
-    canvas.style.left = `${x * CONFIG.cellSize}px`;
-    canvas.style.top = `${y * CONFIG.cellSize}px`;
+// === LIBRARY RENDERING FUNCTIONS ===
+function renderLibrary() {
+  const libraryContainer = document.getElementById('library');
+  libraryContainer.innerHTML = '';
+  libraryBlocks.forEach((block, index) => {
+    const canvas = renderBlockToCanvas(block);
     canvas.draggable = true;
-    canvas.dataset.gridX = x;
-    canvas.dataset.gridY = y;
+    canvas.dataset.blockIndex = index;
+    canvas.title = `Block: ${block.id}`;
     
-    this.boardContainer.appendChild(canvas);
-    this.app.state.boardState.blocks.push({ 
-      x, y, 
-      width: blockData.width, 
-      height: blockData.height, 
-      cells: blockData.cells 
+    canvas.addEventListener('click', (e) => {
+      e.preventDefault();
+      selectBlock(index, canvas);
     });
-
+    
     canvas.addEventListener('dragstart', (e) => {
       const rect = canvas.getBoundingClientRect();
-      this.app.state.draggedData = {
-        source: 'board',
-        blockData: blockData,
+      draggedData = {
+        source: 'library',
+        blockData: JSON.parse(JSON.stringify(block)),
         offsetX: e.clientX - rect.left,
         offsetY: e.clientY - rect.top
       };
-      
-      const idx = this.app.state.boardState.blocks.findIndex(b => b.x === x && b.y === y);
-      if (idx >= 0) this.app.state.boardState.blocks.splice(idx, 1);
-      this.boardContainer.removeChild(canvas);
-      this.app.tileCounter.update();
     });
-  }
+    
+    libraryContainer.appendChild(canvas);
+  });
+  
+  applyFilter();
+}
 
-  isOverlapping(gridX, gridY, blockData) {
-    return this.app.state.boardState.blocks.some(block =>
-      gridX < block.x + block.width &&
-      gridX + blockData.width > block.x &&
-      gridY < block.y + block.height &&
-      gridY + blockData.height > block.y
-    );
-  }
+function renderBlockToCanvas(blockData) {
+  const canvas = createElement('canvas', 'block');
+  const displayWidth = blockData.width * CONFIG.cellSize;
+  const displayHeight = blockData.height * CONFIG.cellSize;
+  
+  canvas.style.width = displayWidth + 'px';
+  canvas.style.height = displayHeight + 'px';
+  canvas.width = displayWidth;
+  canvas.height = displayHeight;
+  
+  const ctx = canvas.getContext('2d');
+  const cellWidth = displayWidth / blockData.width;
+  const cellHeight = displayHeight / blockData.height;
+  
+  blockData.cells.forEach((row, y) => {
+    row.forEach((cell, x) => {
+      drawCell(ctx, x * cellWidth, y * cellHeight, cellWidth, cellHeight, cell.shape, cell.color);
+    });
+  });
+  
+  return canvas;
+}
 
-  addBlockToCanvas(blockData) {
-    let placed = false;
-    for (let y = 0; y <= this.app.state.boardHeight - blockData.height && !placed; y++) {
-      for (let x = 0; x <= this.app.state.boardWidth - blockData.width && !placed; x++) {
-        if (!this.isOverlapping(x, y, blockData)) {
-          this.placeBlock(x, y, blockData);
-          placed = true;
-          this.app.tileCounter.update();
-        }
+function selectBlock(index, canvas) {
+  document.querySelectorAll('.block').forEach(b => b.classList.remove('selected'));
+  canvas.classList.add('selected');
+  selectedLibraryBlock = index;
+}
+
+function applyFilter() {
+  const filterInput = document.getElementById('filter-input');
+  const filterType = document.getElementById('filter-type');
+  const filterText = filterInput.value.toLowerCase().trim();
+  const filterBy = filterType.value;
+  const blocks = document.getElementById('library').querySelectorAll('.block');
+  
+  blocks.forEach((block, index) => {
+    const blockData = libraryBlocks[index];
+    if (!blockData) return;
+    
+    let shouldShow = filterText === '';
+    
+    if (!shouldShow) {
+      switch (filterBy) {
+        case 'id':
+          shouldShow = blockData.id.toLowerCase().includes(filterText);
+          break;
+        case 'width':
+          shouldShow = blockData.width.toString().includes(filterText);
+          break;
+        case 'height':
+          shouldShow = blockData.height.toString().includes(filterText);
+          break;
       }
     }
-    if (!placed) {
-      alert('No space available to place this block');
+    
+    block.classList.toggle('hidden', !shouldShow);
+  });
+}
+
+// === BOARD MANAGEMENT FUNCTIONS ===
+function setBoardSize(width, height) {
+  boardWidth = width;
+  boardHeight = height;
+  boardState.width = width;
+  boardState.height = height;
+}
+
+function initializeCanvas() {
+  boardState.canvas = Array.from({length: boardHeight}, () => 
+    Array.from({length: boardWidth}, () => ({ shape: 'pixel', color: '#ffffff' }))
+  );
+}
+
+function clearBoard() {
+  boardState.blocks = [];
+  initializeCanvas();
+}
+
+function generateBoard() {
+  const widthInput = document.getElementById('board-width');
+  const heightInput = document.getElementById('board-height');
+  
+  const newWidth = Math.max(CONFIG.minBoardSize, Math.min(CONFIG.maxBoardSize, parseInt(widthInput.value) * 16));
+  const newHeight = Math.max(CONFIG.minBoardSize, Math.min(CONFIG.maxBoardSize, parseInt(heightInput.value) * 16));
+  
+  setBoardSize(newWidth, newHeight);
+  clearBoard();
+  initializeCanvas();
+  
+  renderGrid();
+  updateVisuals();
+  updateTileCount();
+}
+
+function renderGrid() {
+  const boardContainer = document.getElementById('board');
+  boardContainer.innerHTML = '';
+  boardContainer.style.width = `${boardWidth * CONFIG.cellSize}px`;
+  boardContainer.style.height = `${boardHeight * CONFIG.cellSize}px`;
+  boardContainer.style.gridTemplateColumns = `repeat(${boardWidth}, ${CONFIG.cellSize}px)`;
+  boardContainer.style.gridTemplateRows = `repeat(${boardHeight}, ${CONFIG.cellSize}px)`;
+  boardContainer.style.gap = '0';
+
+  for (let row = 0; row < boardHeight; row++) {
+    for (let col = 0; col < boardWidth; col++) {
+      const cell = createElement('div', 'grid-cell');
+      cell.dataset.row = row;
+      cell.dataset.col = col;
+      
+      cell.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        editCanvasCell(col, row);
+      });
+      
+      boardContainer.appendChild(cell);
     }
-  }
-
-  setupEventListeners() {
-    // Drop functionality
-    this.boardContainer.addEventListener('dragover', e => e.preventDefault());
-    this.boardContainer.addEventListener('drop', (e) => {
-      e.preventDefault();
-      if (!this.app.state.draggedData) return;
-      
-      const rect = this.boardContainer.getBoundingClientRect();
-      const dropX = Math.floor((e.clientX - rect.left - this.app.state.draggedData.offsetX) / CONFIG.cellSize);
-      const dropY = Math.floor((e.clientY - rect.top - this.app.state.draggedData.offsetY) / CONFIG.cellSize);
-      const blockData = this.app.state.draggedData.blockData;
-      
-      if (
-        dropX < 0 || dropX + blockData.width > this.app.state.boardWidth ||
-        dropY < 0 || dropY + blockData.height > this.app.state.boardHeight
-      ) {
-        this.app.state.draggedData = null;
-        return;
-      }
-      
-      if (this.isOverlapping(dropX, dropY, blockData)) {
-        alert('Block overlaps another.');
-        this.app.state.draggedData = null;
-        return;
-      }
-      
-      this.placeBlock(dropX, dropY, this.app.state.draggedData.blockData);
-      this.app.state.draggedData = null;
-      this.app.tileCounter.update();
-    });
-
-    // Board controls
-    document.getElementById('generate-board').addEventListener('click', () => this.generate());
-    document.getElementById('clear-main-canvas').addEventListener('click', () => this.clearCanvas());
   }
 }
 
-// === BLOCK EDITOR ===
-class BlockEditor {
-  constructor(app) {
-    this.app = app;
-    this.editorContainer = document.getElementById('block-editor');
-    this.editCanvas = document.getElementById('edit-canvas');
-    this.setupEventListeners();
-  }
-
-  openNew() {
-    const width = Math.max(1, Math.min(20, parseInt(document.getElementById('edit-block-width').value) || 3));
-    const height = Math.max(1, Math.min(20, parseInt(document.getElementById('edit-block-height').value) || 5));
-    
-    this.app.state.editingBlock = {
-      id: `block_${Date.now()}`,
-      width: width,
-      height: height,
-      cells: Array.from({length: height}, () => 
-        Array.from({length: width}, () => ({ shape: 'pixel', color: '#cccccc' }))
-      )
-    };
-    this.open();
-  }
-
-  openExisting() {
-    if (this.app.state.selectedLibraryBlock === null) {
-      alert('Please select a block to edit first');
-      return;
-    }
-    this.app.state.editingBlock = JSON.parse(JSON.stringify(this.app.state.libraryBlocks[this.app.state.selectedLibraryBlock]));
-    this.open();
-  }
-
-  open() {
-    this.editorContainer.style.display = 'block';
-    document.getElementById('editing-block-id').textContent = this.app.state.editingBlock.id;
-    document.getElementById('block-id').value = this.app.state.editingBlock.id;
-    document.getElementById('edit-block-width').value = this.app.state.editingBlock.width;
-    document.getElementById('edit-block-height').value = this.app.state.editingBlock.height;
-    this.renderEditCanvas();
-  }
-
-  close() {
-    this.editorContainer.style.display = 'none';
-    this.app.state.editingBlock = null;
-    this.app.state.selectedLibraryBlock = null;
-  }
-
-  renderEditCanvas() {
-    this.editCanvas.innerHTML = '';
-    this.editCanvas.style.width = `${this.app.state.editingBlock.width * CONFIG.editCellSize}px`;
-    this.editCanvas.style.height = `${this.app.state.editingBlock.height * CONFIG.editCellSize}px`;
-    this.editCanvas.style.display = 'grid';
-    this.editCanvas.style.gridTemplateColumns = `repeat(${this.app.state.editingBlock.width}, ${CONFIG.editCellSize}px)`;
-    this.editCanvas.style.gridTemplateRows = `repeat(${this.app.state.editingBlock.height}, ${CONFIG.editCellSize}px)`;
-
-    this.app.state.editingBlock.cells.forEach((row, y) => {
-      row.forEach((cell, x) => {
-        const cellDiv = Utils.createElement('div', 'edit-cell');
-        cellDiv.style.width = `${CONFIG.editCellSize}px`;
-        cellDiv.style.height = `${CONFIG.editCellSize}px`;
-        cellDiv.dataset.x = x;
-        cellDiv.dataset.y = y;
-        
-        const canvas = Utils.createElement('canvas');
-        canvas.width = CONFIG.editCellSize;
-        canvas.height = CONFIG.editCellSize;
+function updateVisuals() {
+  const boardContainer = document.getElementById('board');
+  const cells = boardContainer.querySelectorAll('.grid-cell');
+  
+  boardState.canvas.forEach((row, y) => {
+    row.forEach((cell, x) => {
+      const index = y * boardWidth + x;
+      const cellDiv = cells[index];
+      if (!cellDiv) return;
+      
+      let canvas = cellDiv.querySelector('canvas');
+      if (!canvas) {
+        canvas = createElement('canvas');
+        canvas.width = CONFIG.cellSize;
+        canvas.height = CONFIG.cellSize;
         canvas.style.width = '100%';
         canvas.style.height = '100%';
+        canvas.style.display = 'block';
         canvas.style.pointerEvents = 'none';
-        
-        const ctx = canvas.getContext('2d');
-        Utils.drawCell(ctx, 0, 0, CONFIG.editCellSize, CONFIG.editCellSize, cell.shape, cell.color);
-        
         cellDiv.appendChild(canvas);
-        cellDiv.addEventListener('click', () => this.editCell(x, y));
-        this.editCanvas.appendChild(cellDiv);
-      });
+      }
+      
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, CONFIG.cellSize, CONFIG.cellSize);
+      drawCell(ctx, 0, 0, CONFIG.cellSize, CONFIG.cellSize, cell.shape, cell.color);
     });
-  }
+  });
+}
 
-  editCell(x, y) {
-    const cellType = this.app.editorTileSelector.getSelectedType();
-    const color = document.getElementById('cell-color').value;
-    
-    this.app.state.editingBlock.cells[y][x] = { shape: cellType, color: color };
-    this.renderEditCanvas();
-  }
-
-  resize() {
-    if (!this.app.state.editingBlock) return;
-    
-    const newWidth = Math.max(CONFIG.minBlockSize, Math.min(CONFIG.maxBlockSize, parseInt(document.getElementById('edit-block-width').value)));
-    const newHeight = Math.max(CONFIG.minBlockSize, Math.min(CONFIG.maxBlockSize, parseInt(document.getElementById('edit-block-height').value)));
-    
-    const newCells = Array.from({length: newHeight}, (_, row) =>
-      Array.from({length: newWidth}, (_, col) => {
-        if (row < this.app.state.editingBlock.height && 
-            col < this.app.state.editingBlock.width && 
-            this.app.state.editingBlock.cells[row] && 
-            this.app.state.editingBlock.cells[row][col]) {
-          return this.app.state.editingBlock.cells[row][col];
-        }
-        return { shape: 'pixel', color: '#cccccc' };
-      })
+function editCanvasCell(x, y) {
+  const cellType = getSelectedTileType('canvas');
+  const color = document.getElementById('canvas-cell-color').value;
+  
+  // Create a 1x1 block for the canvas cell and add it to library blocks
+  const canvasBlockId = `canvas_${x}_${y}_${Date.now()}`;
+  const canvasBlock = {
+    id: canvasBlockId,
+    width: 1,
+    height: 1,
+    cells: [[{ shape: cellType, color: color }]]
+  };
+  
+  // Add to library blocks if it's not just a white pixel
+  if (color !== '#ffffff') {
+    const exists = libraryBlocks.some(b => 
+      b.width === 1 && b.height === 1 && 
+      b.cells[0][0].shape === cellType && 
+      b.cells[0][0].color === color
     );
-    
-    this.app.state.editingBlock.width = newWidth;
-    this.app.state.editingBlock.height = newHeight;
-    this.app.state.editingBlock.cells = newCells;
-    this.renderEditCanvas();
-  }
-
-  clear() {
-    const color = "#FFFFFF";
-    this.app.state.editingBlock.cells = Array.from({length: this.app.state.editingBlock.height}, () => 
-      Array.from({length: this.app.state.editingBlock.width}, () => ({ shape: 'pixel', color: color }))
-    );
-    this.renderEditCanvas();
-  }
-
-  save() {
-    const newId = document.getElementById('block-id').value.trim();
-    if (!newId) {
-      alert('Please enter a block ID');
-      return;
+    if (!exists) {
+      libraryBlocks.push(canvasBlock);
+      renderLibrary();
     }
-    
-    this.app.state.editingBlock.id = newId;
-    
-    if (this.app.state.selectedLibraryBlock !== null) {
-      this.app.state.libraryBlocks[this.app.state.selectedLibraryBlock] = this.app.state.editingBlock;
-    } else {
-      this.app.state.libraryBlocks.push(this.app.state.editingBlock);
-    }
-    
-    this.app.libraryRenderer.render();
-    this.close();
   }
+  
+  boardState.canvas[y][x] = { shape: cellType, color: color };
+  updateVisuals();
+  updateTileCount();
+}
 
-  delete() {
-    if (this.app.state.selectedLibraryBlock === null) {
-      alert('Please select a block to delete first');
-      return;
-    }
-    
-    this.app.state.libraryBlocks.splice(this.app.state.selectedLibraryBlock, 1);
-    this.app.state.selectedLibraryBlock = null;
-    this.app.libraryRenderer.render();
+function clearCanvas() {
+  const color = document.getElementById('canvas-cell-color').value;
+  boardState.canvas = Array.from({length: boardHeight}, () => 
+    Array.from({length: boardWidth}, () => ({ shape: 'pixel', color: color }))
+  );
+  boardState.blocks = [];
+  
+  document.querySelectorAll('.placed-block').forEach(block => block.remove());
+  
+  updateVisuals();
+  updateTileCount();
+}
+
+function addBorder() {
+  const color = "#078bc9";
+  
+  // Clear the canvas first with white
+  boardState.canvas = Array.from({length: boardHeight}, () => 
+    Array.from({length: boardWidth}, () => ({ shape: 'pixel', color: '#ffffff' }))
+  );
+  
+  // Add border - top and bottom rows
+  for (let x = 0; x < boardWidth; x++) {
+    boardState.canvas[0][x] = { shape: 'pixel', color: color }; // Top row
+    boardState.canvas[boardHeight - 1][x] = { shape: 'pixel', color: color }; // Bottom row
   }
+  
+  // Add border - left and right columns
+  for (let y = 0; y < boardHeight; y++) {
+    boardState.canvas[y][0] = { shape: 'pixel', color: color }; // Left column
+    boardState.canvas[y][boardWidth - 1] = { shape: 'pixel', color: color }; // Right column
+  }
+  
+  // Clear any existing blocks
+  boardState.blocks = [];
+  document.querySelectorAll('.placed-block').forEach(block => block.remove());
+  
+  updateVisuals();
+  updateTileCount();
+}
 
-  setupEventListeners() {
-    document.getElementById('new-block').addEventListener('click', () => this.openNew());
-    document.getElementById('edit-block').addEventListener('click', () => this.openExisting());
-    document.getElementById('delete-block').addEventListener('click', () => this.delete());
-    document.getElementById('resize-block').addEventListener('click', () => this.resize());
-    document.getElementById('clear-canvas').addEventListener('click', () => this.clear());
-    document.getElementById('save-block-edit').addEventListener('click', () => this.save());
-    document.getElementById('cancel-edit').addEventListener('click', () => this.close());
+function placeBlock(x, y, blockData) {
+  const boardContainer = document.getElementById('board');
+  const canvas = renderBlockToCanvas(blockData);
+  canvas.className = 'placed-block';
+  canvas.style.left = `${x * CONFIG.cellSize}px`;
+  canvas.style.top = `${y * CONFIG.cellSize}px`;
+  canvas.draggable = true;
+  canvas.dataset.gridX = x;
+  canvas.dataset.gridY = y;
+  
+  boardContainer.appendChild(canvas);
+  boardState.blocks.push({ 
+    x, y, 
+    width: blockData.width, 
+    height: blockData.height, 
+    cells: blockData.cells 
+  });
+
+  canvas.addEventListener('dragstart', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    draggedData = {
+      source: 'board',
+      blockData: blockData,
+      offsetX: e.clientX - rect.left,
+      offsetY: e.clientY - rect.top
+    };
+    
+    const idx = boardState.blocks.findIndex(b => b.x === x && b.y === y);
+    if (idx >= 0) boardState.blocks.splice(idx, 1);
+    boardContainer.removeChild(canvas);
+    updateTileCount();
+  });
+}
+
+function isOverlapping(gridX, gridY, blockData) {
+  return boardState.blocks.some(block =>
+    gridX < block.x + block.width &&
+    gridX + blockData.width > block.x &&
+    gridY < block.y + block.height &&
+    gridY + blockData.height > block.y
+  );
+}
+
+function addBlockToCanvas(blockData) {
+  let placed = false;
+  for (let y = 0; y <= boardHeight - blockData.height && !placed; y++) {
+    for (let x = 0; x <= boardWidth - blockData.width && !placed; x++) {
+      if (!isOverlapping(x, y, blockData)) {
+        placeBlock(x, y, blockData);
+        placed = true;
+        updateTileCount();
+      }
+    }
+  }
+  if (!placed) {
+    alert('No space available to place this block');
   }
 }
 
-// === TILE COUNTER ===
-class TileCounter {
-  constructor(app) {
-    this.app = app;
-    this.display = document.getElementById('count-display');
-  }
+// === BLOCK EDITOR FUNCTIONS ===
+function openNewBlockEditor() {
+  const width = Math.max(1, Math.min(20, parseInt(document.getElementById('edit-block-width').value) || 3));
+  const height = Math.max(1, Math.min(20, parseInt(document.getElementById('edit-block-height').value) || 5));
+  
+  editingBlock = {
+    id: `block_${Date.now()}`,
+    width: width,
+    height: height,
+    cells: Array.from({length: height}, () => 
+      Array.from({length: width}, () => ({ shape: 'pixel', color: '#ffffff' }))
+    )
+  };
+  openBlockEditor();
+}
 
-  update() {
-    const counts = Utils.countTiles(this.app.state.boardState);
-    this.display.innerHTML = '';
-    
-    if (Object.keys(counts).length === 0) {
-      this.display.innerHTML = '<div>No tiles to count</div>';
-      return;
-    }
-    
-    Object.entries(counts).forEach(([key, count]) => {
-      const [shape, color] = key.split('|');
-      const item = Utils.createElement('div', 'count-item');
-      
-      const colorDiv = Utils.createElement('div', 'count-color');
-      colorDiv.style.backgroundColor = color;
-      
-      const text = Utils.createElement('span');
-      text.textContent = `${shape}: ${count}`;
-      
-      item.appendChild(colorDiv);
-      item.appendChild(text);
-      this.display.appendChild(item);
-    });
+function openExistingBlockEditor() {
+  if (selectedLibraryBlock === null) {
+    alert('Please select a block to edit first');
+    return;
   }
+  editingBlock = JSON.parse(JSON.stringify(libraryBlocks[selectedLibraryBlock]));
+  openBlockEditor();
+}
+
+function openBlockEditor() {
+  const editorContainer = document.getElementById('block-editor');
+  editorContainer.style.display = 'block';
+  document.getElementById('editing-block-id').textContent = editingBlock.id;
+  document.getElementById('block-id').value = editingBlock.id;
+  document.getElementById('edit-block-width').value = editingBlock.width;
+  document.getElementById('edit-block-height').value = editingBlock.height;
+  renderEditCanvas();
+}
+
+function closeBlockEditor() {
+  const editorContainer = document.getElementById('block-editor');
+  editorContainer.style.display = 'none';
+  editingBlock = null;
+  selectedLibraryBlock = null;
+}
+
+function renderEditCanvas() {
+  const editCanvas = document.getElementById('edit-canvas');
+  editCanvas.innerHTML = '';
+  editCanvas.style.width = `${editingBlock.width * CONFIG.editCellSize}px`;
+  editCanvas.style.height = `${editingBlock.height * CONFIG.editCellSize}px`;
+  editCanvas.style.display = 'grid';
+  editCanvas.style.gridTemplateColumns = `repeat(${editingBlock.width}, ${CONFIG.editCellSize}px)`;
+  editCanvas.style.gridTemplateRows = `repeat(${editingBlock.height}, ${CONFIG.editCellSize}px)`;
+
+  editingBlock.cells.forEach((row, y) => {
+    row.forEach((cell, x) => {
+      const cellDiv = createElement('div', 'edit-cell');
+      cellDiv.style.width = `${CONFIG.editCellSize}px`;
+      cellDiv.style.height = `${CONFIG.editCellSize}px`;
+      cellDiv.dataset.x = x;
+      cellDiv.dataset.y = y;
+      
+      const canvas = createElement('canvas');
+      canvas.width = CONFIG.editCellSize;
+      canvas.height = CONFIG.editCellSize;
+      canvas.style.width = '100%';
+      canvas.style.height = '100%';
+      canvas.style.pointerEvents = 'none';
+      
+      const ctx = canvas.getContext('2d');
+      drawCell(ctx, 0, 0, CONFIG.editCellSize, CONFIG.editCellSize, cell.shape, cell.color);
+      
+      cellDiv.appendChild(canvas);
+      cellDiv.addEventListener('click', () => editBlockCell(x, y));
+      editCanvas.appendChild(cellDiv);
+    });
+  });
+}
+
+function editBlockCell(x, y) {
+  const cellType = getSelectedTileType('editor');
+  const color = document.getElementById('cell-color').value;
+  
+  editingBlock.cells[y][x] = { shape: cellType, color: color };
+  renderEditCanvas();
+}
+
+function resizeBlock() {
+  if (!editingBlock) return;
+  
+  const newWidth = Math.max(CONFIG.minBlockSize, Math.min(CONFIG.maxBlockSize, parseInt(document.getElementById('edit-block-width').value)));
+  const newHeight = Math.max(CONFIG.minBlockSize, Math.min(CONFIG.maxBlockSize, parseInt(document.getElementById('edit-block-height').value)));
+  
+  const newCells = Array.from({length: newHeight}, (_, row) =>
+    Array.from({length: newWidth}, (_, col) => {
+      if (row < editingBlock.height && 
+          col < editingBlock.width && 
+          editingBlock.cells[row] && 
+          editingBlock.cells[row][col]) {
+        return editingBlock.cells[row][col];
+      }
+      return { shape: 'pixel', color: '#cccccc' };
+    })
+  );
+  
+  editingBlock.width = newWidth;
+  editingBlock.height = newHeight;
+  editingBlock.cells = newCells;
+  renderEditCanvas();
+}
+
+function clearEditCanvas() {
+  const color = "#FFFFFF";
+  editingBlock.cells = Array.from({length: editingBlock.height}, () => 
+    Array.from({length: editingBlock.width}, () => ({ shape: 'pixel', color: color }))
+  );
+  renderEditCanvas();
+}
+
+function saveBlock() {
+  const newId = document.getElementById('block-id').value.trim();
+  if (!newId) {
+    alert('Please enter a block ID');
+    return;
+  }
+  
+  editingBlock.id = newId;
+  
+  if (selectedLibraryBlock !== null) {
+    libraryBlocks[selectedLibraryBlock] = editingBlock;
+  } else {
+    libraryBlocks.push(editingBlock);
+  }
+  
+  renderLibrary();
+  closeBlockEditor();
+}
+
+function deleteBlock() {
+  if (selectedLibraryBlock === null) {
+    alert('Please select a block to delete first');
+    return;
+  }
+  
+  libraryBlocks.splice(selectedLibraryBlock, 1);
+  selectedLibraryBlock = null;
+  renderLibrary();
+}
+
+// === TILE COUNTER FUNCTIONS ===
+function updateTileCount() {
+  const display = document.getElementById('count-display');
+  const counts = countTiles(boardState);
+  display.innerHTML = '';
+  
+  if (Object.keys(counts).length === 0) {
+    display.innerHTML = '<div>No tiles to count</div>';
+    return;
+  }
+  
+  Object.entries(counts).forEach(([key, count]) => {
+    const [shape, color] = key.split('|');
+    const item = createElement('div', 'count-item');
+    
+    const colorDiv = createElement('div', 'count-color');
+    colorDiv.style.backgroundColor = color;
+    colorDiv.style.width = '20px';
+    colorDiv.style.height = '20px';
+    colorDiv.style.border = '1px solid #333';
+    colorDiv.style.borderRadius = '2px';
+    
+    const text = createElement('span');
+    text.textContent = `${color}: ${shape}: ${count}`;
+    
+    item.appendChild(colorDiv);
+    item.appendChild(text);
+    display.appendChild(item);
+  });
 }
 
 // === TEXT INPUT HANDLER ===
-class TextInputHandler {
-  constructor(app) {
-    this.app = app;
-    this.textbox = document.getElementById('library-textbox');
-    this.setupEventListeners();
-  }
-
-  setupEventListeners() {
-    this.textbox.addEventListener('input', () => {
-      const currentText = this.textbox.value.toUpperCase();
+function setupTextInputHandler() {
+  document.addEventListener('keydown', (event) => {
+    if (event.code === 'Backspace') {
+      // Remove last item on canvas
+      boardState.blocks.pop();
+      // Remove last placed block element
+      const placedBlocks = document.querySelectorAll('.placed-block');
+      if (placedBlocks.length > 0) {
+        placedBlocks[placedBlocks.length - 1].remove();
+      }
+      updateVisuals();
+      updateTileCount();
+    }
+    else {
+      if (event.code === 'Space') {
+        event.preventDefault(); // Stops the page from scrolling
+      }
+      const currentText = event.key.toUpperCase();
       if (currentText.length > 0) {
         const input = currentText[currentText.length - 1];
-        this.app.state.libraryBlocks.forEach(block => {
+        libraryBlocks.forEach(block => {
           if (input === block.id) {
-            this.app.boardManager.addBlockToCanvas(block);
+            addBlockToCanvas(block);
           }
         });
       }
-      this.textbox.value = "";
-    });
-  }
+    }
+  });
 }
 
-// === SAVE/LOAD MANAGER ===
-class SaveLoadManager {
-  constructor(app) {
-    this.app = app;
-    this.boardJson = document.getElementById('board-json');
-    this.libraryJson = document.getElementById('library-json');
-    this.setupEventListeners();
-  }
+// === SAVE/LOAD FUNCTIONS ===
+function saveBoard() {
+  const boardJson = document.getElementById('board-json');
+  boardJson.value = JSON.stringify(boardState, null, 2);
+}
 
-  saveBoard() {
-    this.boardJson.value = JSON.stringify(this.app.state.boardState, null, 2);
-  }
-
-  loadBoard() {
-    try {
-      const data = JSON.parse(this.boardJson.value);
-      
-      document.getElementById('board-width').value = data.width / 16;
-      document.getElementById('board-height').value = data.height / 16;
-      
-      if (data.canvas) {
-        this.app.state.boardState.canvas = data.canvas;
-      }
-      
-      this.app.boardManager.generate();
-      
-      if (data.blocks) {
-        data.blocks.forEach(block => {
-          this.app.boardManager.placeBlock(block.x, block.y, { 
-            width: block.width, 
-            height: block.height, 
-            cells: block.cells 
-          });
+function loadBoard() {
+  const boardJson = document.getElementById('board-json');
+  try {
+    const data = JSON.parse(boardJson.value);
+    
+    document.getElementById('board-width').value = data.width / 16;
+    document.getElementById('board-height').value = data.height / 16;
+    
+    if (data.canvas) {
+      boardState.canvas = data.canvas;
+    }
+    
+    generateBoard();
+    
+    if (data.blocks) {
+      data.blocks.forEach(block => {
+        placeBlock(block.x, block.y, { 
+          width: block.width, 
+          height: block.height, 
+          cells: block.cells 
         });
-      }
-      
-      this.app.boardManager.updateVisuals();
-      this.app.tileCounter.update();
-    } catch (e) {
-      alert('Invalid JSON');
+      });
     }
-  }
-
-  saveLibrary() {
-    this.libraryJson.value = JSON.stringify(this.app.state.libraryBlocks, null, 2);
-  }
-
-  loadLibrary() {
-    try {
-      const data = JSON.parse(this.libraryJson.value);
-      this.app.state.libraryBlocks = data;
-      this.app.libraryRenderer.render();
-      this.app.state.selectedLibraryBlock = null;
-    } catch (e) {
-      alert('Invalid Library JSON');
-    }
-  }
-
-  setupEventListeners() {
-    document.getElementById('save-board').addEventListener('click', () => this.saveBoard());
-    document.getElementById('load-board').addEventListener('click', () => this.loadBoard());
-    document.getElementById('save-library').addEventListener('click', () => this.saveLibrary());
-    document.getElementById('load-library').addEventListener('click', () => this.loadLibrary());
+    
+    updateVisuals();
+    updateTileCount();
+  } catch (e) {
+    alert('Invalid JSON');
   }
 }
 
-// === MAIN APPLICATION ===
-class AlphaPixApp {
-  constructor() {
-    this.state = new AppState();
-    this.init();
-  }
+function saveLibrary() {
+  const libraryJson = document.getElementById('library-json');
+  libraryJson.value = JSON.stringify(libraryBlocks, null, 2);
+}
 
-  async init() {
-    // Initialize all managers
-    this.fontManager = new FontManager(this);
-    this.libraryRenderer = new LibraryRenderer(this);
-    this.boardManager = new BoardManager(this);
-    this.blockEditor = new BlockEditor(this);
-    this.tileCounter = new TileCounter(this);
-    this.textInputHandler = new TextInputHandler(this);
-    this.saveLoadManager = new SaveLoadManager(this);
-    
-    // Initialize color palettes
-    this.editorPalette = new ColorPalette('editor-palette', 'cell-color');
-    this.canvasPalette = new ColorPalette('canvas-palette', 'canvas-cell-color');
-    
-    // Initialize tile type selectors
-    this.editorTileSelector = new TileTypeSelector('editor-tile-selector');
-    this.canvasTileSelector = new TileTypeSelector('canvas-tile-selector');
-    
-    // Generate initial board
-    this.boardManager.generate();
+function loadLibrary() {
+  const libraryJson = document.getElementById('library-json');
+  try {
+    const data = JSON.parse(libraryJson.value);
+    libraryBlocks = data;
+    renderLibrary();
+    selectedLibraryBlock = null;
+  } catch (e) {
+    alert('Invalid Library JSON');
   }
 }
 
-// === INITIALIZATION ===
-document.addEventListener('DOMContentLoaded', () => {
-  window.alphaPixApp = new AlphaPixApp();
-});
+// === BOARD EVENT HANDLERS ===
+function setupBoardEventHandlers() {
+  const boardContainer = document.getElementById('board');
+  
+  // Drop functionality
+  boardContainer.addEventListener('dragover', e => e.preventDefault());
+  boardContainer.addEventListener('drop', (e) => {
+    e.preventDefault();
+    if (!draggedData) return;
+    
+    const rect = boardContainer.getBoundingClientRect();
+    const dropX = Math.floor((e.clientX - rect.left - draggedData.offsetX) / CONFIG.cellSize);
+    const dropY = Math.floor((e.clientY - rect.top - draggedData.offsetY) / CONFIG.cellSize);
+    const blockData = draggedData.blockData;
+    
+    if (
+      dropX < 0 || dropX + blockData.width > boardWidth ||
+      dropY < 0 || dropY + blockData.height > boardHeight
+    ) {
+      draggedData = null;
+      return;
+    }
+    
+    if (isOverlapping(dropX, dropY, blockData)) {
+      alert('Block overlaps another.');
+      draggedData = null;
+      return;
+    }
+    
+    placeBlock(dropX, dropY, draggedData.blockData);
+    draggedData = null;
+    updateTileCount();
+  });
+}
+
+// === INITIALIZATION FUNCTIONS ===
+function setupEventListeners() {
+  // Font selector
+  document.getElementById('font-selector').addEventListener('change', (e) => {
+    if (e.target.value) {
+      loadFont(e.target.value);
+    }
+  });
+
+  // Filter controls
+  document.getElementById('filter-input').addEventListener('input', applyFilter);
+  document.getElementById('filter-type').addEventListener('change', () => {
+    const filterBy = document.getElementById('filter-type').value;
+    const filterInput = document.getElementById('filter-input');
+    const placeholders = {
+      id: 'Filter by ID...',
+      width: 'Filter by width (e.g., 3)...',
+      height: 'Filter by height (e.g., 5)...'
+    };
+    filterInput.placeholder = placeholders[filterBy] || 'Filter...';
+    applyFilter();
+  });
+
+  // Board controls
+  document.getElementById('generate-board').addEventListener('click', generateBoard);
+  document.getElementById('clear-main-canvas').addEventListener('click', clearCanvas);
+  document.getElementById('add-border').addEventListener('click', addBorder);
+
+  // Block editor controls
+  document.getElementById('new-block').addEventListener('click', openNewBlockEditor);
+  document.getElementById('edit-block').addEventListener('click', openExistingBlockEditor);
+  document.getElementById('delete-block').addEventListener('click', deleteBlock);
+  document.getElementById('resize-block').addEventListener('click', resizeBlock);
+  document.getElementById('clear-canvas').addEventListener('click', clearEditCanvas);
+  document.getElementById('save-block-edit').addEventListener('click', saveBlock);
+  document.getElementById('cancel-edit').addEventListener('click', closeBlockEditor);
+
+  // Save/Load controls
+  document.getElementById('save-board').addEventListener('click', saveBoard);
+  document.getElementById('load-board').addEventListener('click', loadBoard);
+  document.getElementById('save-library').addEventListener('click', saveLibrary);
+  document.getElementById('load-library').addEventListener('click', loadLibrary);
+}
+
+// === MAIN INITIALIZATION ===
+async function initializeApp() {
+  // Initialize tile type selectors
+  initTileTypeSelector('editor-tile-selector', 'editor', 'editor');
+  initTileTypeSelector('canvas-tile-selector', 'canvas', 'canvas');
+  
+  // Initialize color palettes
+  initColorPalette('editor-palette', 'cell-color');
+  initColorPalette('canvas-palette', 'canvas-cell-color');
+  
+  // Load fonts and setup event listeners
+  await loadAvailableFonts();
+  setupEventListeners();
+  setupBoardEventHandlers();
+  setupTextInputHandler();
+  
+  // Generate initial board
+  generateBoard();
+}
+
+// Start the application when the DOM is loaded
+document.addEventListener('DOMContentLoaded', initializeApp);
 
 </script>
 
