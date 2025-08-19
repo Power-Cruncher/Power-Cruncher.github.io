@@ -401,7 +401,7 @@
       <input type="number" id="board-height" value="2" min="1" max="8"> ×
       <input type="number" id="board-width" value="2" min="1" max="8">
       <button id="generate-board">Resize</button>
-      <button id="clear-main-canvas">Fill Canvas</button>
+      <button id="clear-main-canvas">Clear Board</button>
       <button id="add-border">Add Border</button>
     </div>
   </div>
@@ -536,22 +536,7 @@ function createElement(tag, className = '', attributes = {}) {
 function countTiles(boardState) {
   const counts = {};
 
-  // Count canvas cells
-  if (boardState.canvas && Array.isArray(boardState.canvas)) {
-    boardState.canvas.forEach(row => {
-      if (Array.isArray(row)) {
-        row.forEach(cell => {
-          if (cell && cell.color && cell.color !== '#ffffff') {
-            const tile = ['tl','tr','bl','br'].includes(cell.shape) ? 'tl' : cell.shape;
-            const key = `${tile}|${cell.color}`;
-            counts[key] = (counts[key] || 0) + 1;
-          }
-        });
-      }
-    });
-  }
-
-  // Count block cells
+  // Count block cells only (canvas system removed)
   if (boardState.blocks && Array.isArray(boardState.blocks)) {
     boardState.blocks.forEach(block => {
       if (block.cells && Array.isArray(block.cells)) {
@@ -570,7 +555,17 @@ function countTiles(boardState) {
     });
   }
 
-  return counts;
+  // Convert to array and sort by count descending
+  const sorted = Object.entries(counts)
+    .map(([key, count]) => {
+      const [shape, color] = key.split('|');
+      return { shape, color, count };
+    })
+    .sort((a, b) => b.count - a.count);
+  
+
+  return sorted;
+  // return counts;
 }
 
 // === TILE TYPE SELECTOR FUNCTIONS ===
@@ -840,15 +835,8 @@ function setBoardSize(width, height) {
   boardState.height = height;
 }
 
-function initializeCanvas() {
-  boardState.canvas = Array.from({length: boardHeight}, () => 
-    Array.from({length: boardWidth}, () => ({ shape: 'pixel', color: '#ffffff' }))
-  );
-}
-
 function clearBoard() {
   boardState.blocks = [];
-  initializeCanvas();
 }
 
 function generateBoard() {
@@ -860,10 +848,8 @@ function generateBoard() {
   
   setBoardSize(newWidth, newHeight);
   clearBoard();
-  initializeCanvas();
   
   renderGrid();
-  updateVisuals();
   updateTileCount();
 }
 
@@ -893,41 +879,11 @@ function renderGrid() {
   }
 }
 
-function updateVisuals() {
-  const boardContainer = document.getElementById('board');
-  const cells = boardContainer.querySelectorAll('.grid-cell');
-  
-  boardState.canvas.forEach((row, y) => {
-    row.forEach((cell, x) => {
-      const index = y * boardWidth + x;
-      const cellDiv = cells[index];
-      if (!cellDiv) return;
-      
-      let canvas = cellDiv.querySelector('canvas');
-      if (!canvas) {
-        canvas = createElement('canvas');
-        canvas.width = CONFIG.cellSize;
-        canvas.height = CONFIG.cellSize;
-        canvas.style.width = '100%';
-        canvas.style.height = '100%';
-        canvas.style.display = 'block';
-        canvas.style.pointerEvents = 'none';
-        cellDiv.appendChild(canvas);
-      }
-      
-      const ctx = canvas.getContext('2d');
-      ctx.clearRect(0, 0, CONFIG.cellSize, CONFIG.cellSize);
-      drawCell(ctx, 0, 0, CONFIG.cellSize, CONFIG.cellSize, cell.shape, cell.color);
-    });
-  });
-  console.log(boardState);
-}
-
 function editCanvasCell(x, y) {
   const cellType = getSelectedTileType('canvas');
   const color = document.getElementById('canvas-cell-color').value;
   
-  // Create a 1x1 block for the canvas cell and add it to library blocks
+  // Create a 1x1 block for the canvas cell
   const canvasBlockId = `canvas_${x}_${y}_${Date.now()}`;
   const canvasBlock = {
     id: canvasBlockId,
@@ -936,39 +892,17 @@ function editCanvasCell(x, y) {
     cells: [[{ shape: cellType, color: color }]]
   };
   
-  placeBlock(x, y,canvasBlock);
-  // boardState.canvas[y][x] = { shape: cellType, color: color };
-  // updateVisuals();
+  placeBlock(x, y, canvasBlock);
   updateTileCount();
-  console.log("drew a tile!")
 }
 
 function clearCanvas() {
-  const color = document.getElementById('canvas-cell-color').value;
-  boardState.canvas = Array.from({length: boardHeight}, () => 
-    Array.from({length: boardWidth}, () => ({ shape: 'pixel', color: color }))
-  );
   boardState.blocks = [];
   
   document.querySelectorAll('.placed-block').forEach(block => block.remove());
   
-  updateVisuals();
   updateTileCount();
 }
-
-/*
-  // Create a 1x1 block for the canvas cell and add it to library blocks
-  const canvasBlockId = `canvas_${x}_${y}_${Date.now()}`;
-  const canvasBlock = {
-    id: canvasBlockId,
-    width: 1,
-    height: 1,
-    cells: [[{ shape: cellType, color: color }]]
-  };
-  
-  placeBlock(x, y,canvasBlock);
-
-*/
 
 function addBorder() {
   //2025-08-18: refactored by a human
@@ -1205,13 +1139,14 @@ function updateTileCount() {
   const counts = countTiles(boardState);
   display.innerHTML = '';
   
-  if (Object.keys(counts).length === 0) {
+  if (counts.length === 0) {
     display.innerHTML = '<div>No tiles to count</div>';
     return;
   }
   
-  Object.entries(counts).forEach(([key, count]) => {
-    const [shape, color] = key.split('|');
+  // Object.entries(counts).forEach(([key, count]) => {
+  counts.forEach(({ shape, color, count }) => {
+    // const [shape, color] = key.split('|');
     const item = createElement('div', 'count-item');
     
     const colorIdx = COLOR_PALETTE.indexOf(color);
@@ -1240,16 +1175,6 @@ function updateTileCount() {
   });
 }
 
-
-/*
-const COLOR_PALETTE = [
-  '#ff0000', '#CCCCCC', "#808080", "#000000", "#FFFFFF",
-  "#078bc9", "#ff698f", "#e1d5ed", "#4b9f4a", "#f2cd37"
-];
-const COLOR_NAMES = [
-
-*/
-
 // === TEXT INPUT HANDLER ===
 function setupTextInputHandler() {
   document.addEventListener('keydown', (event) => {
@@ -1261,7 +1186,6 @@ function setupTextInputHandler() {
       if (placedBlocks.length > 0) {
         placedBlocks[placedBlocks.length - 1].remove();
       }
-      updateVisuals();
       updateTileCount();
     }
     else {
@@ -1295,10 +1219,6 @@ function loadBoard() {
     document.getElementById('board-width').value = data.width / 16;
     document.getElementById('board-height').value = data.height / 16;
     
-    if (data.canvas) {
-      boardState.canvas = data.canvas;
-    }
-    
     generateBoard();
     
     if (data.blocks) {
@@ -1311,7 +1231,6 @@ function loadBoard() {
       });
     }
     
-    updateVisuals();
     updateTileCount();
   } catch (e) {
     alert('Invalid JSON');
