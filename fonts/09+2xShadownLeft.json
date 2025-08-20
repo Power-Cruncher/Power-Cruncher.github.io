@@ -7,11 +7,11 @@
       [
         {
           "shape": "pixel",
-          "color": "#FFFFFF"
+          "color": "#ffffff00"
         },
         {
           "shape": "pixel",
-          "color": "#FFFFFF"
+          "color": "#ffffff00"
         },
         {
           "shape": "tl",
@@ -35,13 +35,13 @@
         },
         {
           "shape": "pixel",
-          "color": "#FFFFFF"
+          "color": "#ffffff00"
         }
       ],
       [
         {
           "shape": "pixel",
-          "color": "#FFFFFF"
+          "color": "#ffffff00"
         },
         {
           "shape": "tl",
@@ -69,7 +69,7 @@
         },
         {
           "shape": "pixel",
-          "color": "#FFFFFF"
+          "color": "#ffffff00"
         }
       ],
       [
@@ -103,7 +103,7 @@
         },
         {
           "shape": "pixel",
-          "color": "#FFFFFF"
+          "color": "#ffffff00"
         }
       ],
       [
@@ -137,7 +137,7 @@
         },
         {
           "shape": "pixel",
-          "color": "#FFFFFF"
+          "color": "#ffffff00"
         }
       ],
       [
@@ -171,7 +171,7 @@
         },
         {
           "shape": "pixel",
-          "color": "#FFFFFF"
+          "color": "#ffffff00"
         }
       ],
       [
@@ -205,7 +205,7 @@
         },
         {
           "shape": "pixel",
-          "color": "#FFFFFF"
+          "color": "#ffffff00"
         }
       ],
       [
@@ -239,7 +239,7 @@
         },
         {
           "shape": "pixel",
-          "color": "#FFFFFF"
+          "color": "#ffffff00"
         }
       ],
       [
@@ -269,11 +269,11 @@
         },
         {
           "shape": "pixel",
-          "color": "#FFFFFF"
+          "color": "#ffffff00"
         },
         {
           "shape": "pixel",
-          "color": "#FFFFFF"
+          "color": "#ffffff00"
         }
       ],
       [
@@ -299,15 +299,15 @@
         },
         {
           "shape": "pixel",
-          "color": "#ffffff"
+          "color": "#ffffff00"
         },
         {
           "shape": "pixel",
-          "color": "#ffffff"
+          "color": "#ffffff00"
         },
         {
           "shape": "pixel",
-          "color": "#ffffff"
+          "color": "#ffffff00"
         }
       ]
     ]
@@ -320,7 +320,7 @@
       [
         {
           "shape": "pixel",
-          "color": "#ffffff"
+          "color": "#ffffff00"
         },
         {
           "shape": "tl",
@@ -348,7 +348,7 @@
         },
         {
           "shape": "pixel",
-          "color": "#ffffff"
+          "color": "#ffffff00"
         }
       ],
       [
@@ -382,7 +382,7 @@
         },
         {
           "shape": "pixel",
-          "color": "#ffffff"
+          "color": "#ffffff00"
         }
       ],
       [
@@ -416,7 +416,7 @@
         },
         {
           "shape": "pixel",
-          "color": "#ffffff"
+          "color": "#ffffff00"
         }
       ],
       [
@@ -450,7 +450,7 @@
         },
         {
           "shape": "pixel",
-          "color": "#ffffff"
+          "color": "#ffffff00"
         }
       ],
       [
@@ -484,7 +484,7 @@
         },
         {
           "shape": "pixel",
-          "color": "#ffffff"
+          "color": "#ffffff00"
         }
       ],
       [
@@ -518,7 +518,7 @@
         },
         {
           "shape": "pixel",
-          "color": "#ffffff"
+          "color": "#ffffff00"
         }
       ],
       [
@@ -552,7 +552,7 @@
         },
         {
           "shape": "pixel",
-          "color": "#ffffff"
+          "color": "#ffffff00"
         }
       ],
       [
@@ -582,11 +582,11 @@
         },
         {
           "shape": "pixel",
-          "color": "#ffffff"
+          "color": "#ffffff00"
         },
         {
           "shape": "pixel",
-          "color": "#ffffff"
+          "color": "#ffffff00"
         }
       ],
       [
@@ -612,15 +612,15 @@
         },
         {
           "shape": "pixel",
-          "color": "#ffffff"
+          "color": "#ffffff00"
         },
         {
           "shape": "pixel",
-          "color": "#ffffff"
+          "color": "#ffffff00"
         },
         {
           "shape": "pixel",
-          "color": "#ffffff"
+          "color": "#ffffff00"
         }
       ]
     ]
@@ -633,11 +633,11 @@
       [
         {
           "shape": "pixel",
-          "color": "#ffffff"
+          "color": "#ffffff00"
         },
         {
           "shape": "pixel",
-          "color": "#ffffff"
+          "color": "#ffffff00"
         },
         {
           "shape": "pixel",
@@ -661,13 +661,13 @@
         },
         {
           "shape": "pixel",
-          "color": "#ffffff"
+          "color": "#ffffff00"
         }
       ],
       [
         {
           "shape": "pixel",
-          "color": "#ffffff"
+          "color": "#ffffff00"
         },
         {
           "shape": "tl",
@@ -695,7 +695,7 @@
         },
         {
           "shape": "pixel",
-          "color": "#ffffff"
+          "color": "#ffffff00"
         }
       ],
       [
@@ -729,7 +729,7 @@
         },
         {
           "shape": "pixel",
-          "color": "#ffffff"
+          "color": "#ffffff00"
         }
       ],
       [
@@ -763,7 +763,7 @@
         },
         {
           "shape": "pixel",
-          "color": "#ffffff"
+          "color": "#ffffff00"
         }
       ],
       [
@@ -797,7 +797,7 @@
         },
         {
           "shape": "pixel",
-          "color": "#ffffff"
+          "color": "#ffffff00"
         }
       ],
       [
@@ -831,7 +831,7 @@
         },
         {
           "shape": "pixel",
-          "color": "#ffffff"
+          "color": "#ffffff00"
         }
       ],
       [
@@ -865,7 +865,7 @@
         },
         {
           "shape": "pixel",
-          "color": "#ffffff"
+          "color": "#ffffff00"
         }
       ],
       [
@@ -899,7 +899,7 @@
         },
         {
           "shape": "pixel",
-          "color": "#ffffff"
+          "color": "#ffffff00"
         }
       ],
       [
@@ -929,11 +929,11 @@
         },
         {
           "shape": "pixel",
-          "color": "#ffffff"
+          "color": "#ffffff00"
         },
         {
           "shape": "pixel",
-          "color": "#ffffff"
+          "color": "#ffffff00"
         }
       ]
     ]
@@ -946,11 +946,11 @@
       [
         {
           "shape": "pixel",
-          "color": "#ffffff"
+          "color": "#ffffff00"
         },
         {
           "shape": "pixel",
-          "color": "#ffffff"
+          "color": "#ffffff00"
         },
         {
           "shape": "tl",
@@ -974,13 +974,13 @@
         },
         {
           "shape": "pixel",
-          "color": "#ffffff"
+          "color": "#ffffff00"
         }
       ],
       [
         {
           "shape": "pixel",
-          "color": "#ffffff"
+          "color": "#ffffff00"
         },
         {
           "shape": "tl",
@@ -1008,7 +1008,7 @@
         },
         {
           "shape": "pixel",
-          "color": "#ffffff"
+          "color": "#ffffff00"
         }
       ],
       [
@@ -1042,7 +1042,7 @@
         },
         {
           "shape": "pixel",
-          "color": "#ffffff"
+          "color": "#ffffff00"
         }
       ],
       [
@@ -1076,7 +1076,7 @@
         },
         {
           "shape": "pixel",
-          "color": "#ffffff"
+          "color": "#ffffff00"
         }
       ],
       [
@@ -1110,7 +1110,7 @@
         },
         {
           "shape": "pixel",
-          "color": "#ffffff"
+          "color": "#ffffff00"
         }
       ],
       [
@@ -1144,7 +1144,7 @@
         },
         {
           "shape": "pixel",
-          "color": "#ffffff"
+          "color": "#ffffff00"
         }
       ],
       [
@@ -1178,7 +1178,7 @@
         },
         {
           "shape": "pixel",
-          "color": "#ffffff"
+          "color": "#ffffff00"
         }
       ],
       [
@@ -1208,11 +1208,11 @@
         },
         {
           "shape": "pixel",
-          "color": "#ffffff"
+          "color": "#ffffff00"
         },
         {
           "shape": "pixel",
-          "color": "#ffffff"
+          "color": "#ffffff00"
         }
       ],
       [
@@ -1238,15 +1238,15 @@
         },
         {
           "shape": "pixel",
-          "color": "#ffffff"
+          "color": "#ffffff00"
         },
         {
           "shape": "pixel",
-          "color": "#ffffff"
+          "color": "#ffffff00"
         },
         {
           "shape": "pixel",
-          "color": "#ffffff"
+          "color": "#ffffff00"
         }
       ]
     ]
