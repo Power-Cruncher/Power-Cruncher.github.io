@@ -45,7 +45,7 @@
 
   .color-palette {
     display: grid;
-    grid-template-columns: repeat(8, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     gap: 4px;
     margin: 10px 0;
   }
@@ -81,8 +81,8 @@
   }
 
   #library {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
     gap: 10px;
     max-height: 300px;
     overflow-y: auto;
@@ -97,6 +97,7 @@
     cursor: grab;
     image-rendering: pixelated;
     border-radius: 2px;
+    justify-self: center;
   }
 
   .block.selected {
@@ -143,12 +144,72 @@
     z-index: 20;
   }
 
+  .placed-block.selected {
+    box-shadow: 0 0 0 3px #ff6b6b;
+    z-index: 15;
+  }
+
+  .selection-rectangle {
+    position: absolute;
+    border: 2px dashed #007acc;
+    background: rgba(0, 122, 204, 0.1);
+    pointer-events: none;
+    z-index: 5;
+  }
+
+  /* Block Editor Modal Styles */
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-content {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    max-width: 80vw;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    position: relative;
+  }
+
+  .modal-close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #999;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-close:hover {
+    color: #333;
+    background: #f0f0f0;
+    border-radius: 50%;
+  }
+
   #block-editor {
     background: #f5f5f5;
     border: 1px solid #ddd;
     border-radius: 8px;
     padding: 15px;
-    margin-top: 10px;
   }
 
   #edit-canvas {
@@ -221,6 +282,12 @@
     font-weight: bold;
   }
 
+  .tile-type-option.selection {
+    font-size: 16px;
+    color: #333;
+    font-weight: bold;
+  }
+
   .tile-type-label {
     font-size: 11px;
     color: #333;
@@ -238,6 +305,19 @@
     background: white;
     border: 1px solid #ddd;
     border-radius: 4px;
+  }
+
+  .selection-tools {
+    margin-top: 10px;
+    padding: 10px;
+    background: #e8f4fd;
+    border: 1px solid #b3d7f0;
+    border-radius: 6px;
+    display: none;
+  }
+
+  .selection-tools.active {
+    display: block;
   }
 
   @media (max-width: 1200px) {
@@ -285,8 +365,85 @@
       <button id="edit-block">Edit Selected</button>
       <button id="delete-block">Delete</button>
     </div>
-    <div id="block-editor" style="display: none;">
-      <h4>Edit Block: <span id="editing-block-id"></span></h4>
+  </div>
+  
+  <div class="section">
+    <h3>Save / Load Library</h3>
+    <div class="control-row">
+      <button id="save-library">Export JSON</button>
+      <button id="load-library">Import JSON</button>
+    </div>
+    <textarea id="library-json" rows="4"></textarea>
+  </div>
+</div>
+
+<div id="main-area">
+  <div class="section">
+    <div id="board-container">
+      <div id="board"></div>
+    </div>
+  </div>
+  
+  <div class="section">
+    <h3>Board Controls</h3>
+    <div class="control-row">
+      <label>Board Size:</label>
+      <input type="number" id="board-height" value="2" min="1" max="8"> ×
+      <input type="number" id="board-width" value="2" min="1" max="8">
+      <button id="generate-board">Resize</button>
+      <button id="clear-main-canvas">Clear Board</button>
+      <button id="add-border">Add Border</button>
+      <button id="print-board">Print Board</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>Canvas Editor Tools</h3>
+    <div class="tile-controls">
+      <div>
+        <label><strong>Tool:</strong></label>
+        <div class="tile-type-selector" id="canvas-tile-selector"></div>
+      </div>
+      <br>
+      <div>
+        <label><strong>Color:</strong></label>
+        <input type="color" id="canvas-cell-color" value="#cccccc">
+        <div class="color-palette" id="canvas-palette"></div>
+      </div>
+    </div>
+    
+    <div class="selection-tools" id="selection-tools">
+      <h4>Selection Tools</h4>
+      <div class="control-row">
+        <button id="copy-selection">Copy</button>
+        <button id="move-selection">Move</button>
+        <button id="delete-selection">Delete</button>
+        <button id="clear-selection">Clear Selection</button>
+      </div>
+    </div>
+  </div>
+  
+  <div class="section">
+    <h3>Tile Count</h3>
+    <div id="count-display"></div>
+  </div>
+  
+  <div class="section">
+    <h3>Save / Load Board</h3>
+    <div class="control-row">
+      <button id="save-board">Save Board</button>
+      <button id="load-board">Load Board</button>
+    </div>
+    <textarea id="board-json" rows="4"></textarea>
+  </div>
+</div>
+
+<!-- Block Editor Modal -->
+<div class="modal-overlay" id="editor-modal">
+  <div class="modal-content">
+    <button class="modal-close" onclick="closeBlockEditor()">×</button>
+    <div id="block-editor">
+      <h3>Edit Block: <span id="editing-block-id"></span></h3>
       <div class="control-group">
         <label>Block ID: <input type="text" id="block-id" placeholder="block_name"></label>
       </div>
@@ -316,65 +473,6 @@
       </div>
     </div>
   </div>
-  
-  <div class="section">
-    <h3>Save / Load Library</h3>
-    <div class="control-row">
-      <button id="save-library">Export JSON</button>
-      <button id="load-library">Import JSON</button>
-    </div>
-    <textarea id="library-json" rows="4"></textarea>
-  </div>
-</div>
-
-<div id="main-area">
-  <div class="section">
-    <div id="board-container">
-      <div id="board"></div>
-    </div>
-  </div>
-  
-  <div class="section">
-    <h3>Board Controls</h3>
-    <div class="control-row">
-      <label>Board Size:</label>
-      <input type="number" id="board-height" value="2" min="1" max="8"> ×
-      <input type="number" id="board-width" value="2" min="1" max="8">
-      <button id="generate-board">Resize</button>
-      <button id="clear-main-canvas">Clear Board</button>
-      <button id="add-border">Add Border</button>
-    </div>
-  </div>
-
-  <div class="section">
-    <h3>Canvas Editor Tools</h3>
-    <div class="tile-controls">
-      <div>
-        <label><strong>Tile Type:</strong></label>
-        <div class="tile-type-selector" id="canvas-tile-selector"></div>
-      </div>
-      <br>
-      <div>
-        <label><strong>Color:</strong></label>
-        <input type="color" id="canvas-cell-color" value="#cccccc">
-        <div class="color-palette" id="canvas-palette"></div>
-      </div>
-    </div>
-  </div>
-  
-  <div class="section">
-    <h3>Tile Count</h3>
-    <div id="count-display"></div>
-  </div>
-  
-  <div class="section">
-    <h3>Save / Load Board</h3>
-    <div class="control-row">
-      <button id="save-board">Save Board</button>
-      <button id="load-board">Load Board</button>
-    </div>
-    <textarea id="board-json" rows="4"></textarea>
-  </div>
 </div>
 
 <script>
@@ -388,7 +486,7 @@ const CONFIG = {
   minBlockSize: 1
 };
 
-const possibleFonts = ['04.json','06.json','07+ShadowDown.json',
+const possibleFonts = ['03.json', '04.json','06.json','07+ShadowDown.json',
   '07.json','08.json','09+2xShadownLeft.json','10+2xShadownLeft.json'];
 const borderColor = '#078bc9ff';
 const COLOR_PALETTE = [
@@ -425,6 +523,14 @@ let isDraggingBlock = false;
 let draggedBlockElement = null;
 let draggedBlockData = null;
 let dragOffset = { x: 0, y: 0 };
+
+// Selection state
+let isSelectionMode = false;
+let isSelecting = false;
+let selectionStart = { x: 0, y: 0 };
+let selectionEnd = { x: 0, y: 0 };
+let selectedBlocks = new Set();
+let selectionRectangle = null;
 
 // === UTILITY FUNCTIONS ===
 function drawCell(ctx, x, y, cellWidth, cellHeight, shape, color) {
@@ -511,6 +617,115 @@ function countTiles(boardState) {
   return sorted;
 }
 
+// === SELECTION FUNCTIONS ===
+function toggleSelectionMode() {
+  isSelectionMode = !isSelectionMode;
+  const selectionTools = document.getElementById('selection-tools');
+  
+  if (isSelectionMode) {
+    selectionTools.classList.add('active');
+    document.getElementById('board').style.cursor = 'crosshair';
+  } else {
+    selectionTools.classList.remove('active');
+    clearSelection();
+    document.getElementById('board').style.cursor = 'crosshair';
+  }
+}
+
+function clearSelection() {
+  selectedBlocks.clear();
+  document.querySelectorAll('.placed-block.selected').forEach(block => {
+    block.classList.remove('selected');
+  });
+  
+  if (selectionRectangle) {
+    selectionRectangle.remove();
+    selectionRectangle = null;
+  }
+}
+
+function createSelectionRectangle(x1, y1, x2, y2) {
+  if (selectionRectangle) {
+    selectionRectangle.remove();
+  }
+  
+  const left = Math.min(x1, x2) * CONFIG.cellSize;
+  const top = Math.min(y1, y2) * CONFIG.cellSize;
+  const width = (Math.abs(x2 - x1) + 1) * CONFIG.cellSize;
+  const height = (Math.abs(y2 - y1) + 1) * CONFIG.cellSize;
+  
+  selectionRectangle = createElement('div', 'selection-rectangle');
+  selectionRectangle.style.left = `${left}px`;
+  selectionRectangle.style.top = `${top}px`;
+  selectionRectangle.style.width = `${width}px`;
+  selectionRectangle.style.height = `${height}px`;
+  
+  document.getElementById('board').appendChild(selectionRectangle);
+}
+
+function selectBlocksInArea(x1, y1, x2, y2) {
+  const minX = Math.min(x1, x2);
+  const maxX = Math.max(x1, x2);
+  const minY = Math.min(y1, y2);
+  const maxY = Math.max(y1, y2);
+  
+  boardState.blocks.forEach((block, index) => {
+    const blockEndX = block.x + block.width - 1;
+    const blockEndY = block.y + block.height - 1;
+    
+    if (block.x <= maxX && blockEndX >= minX && 
+        block.y <= maxY && blockEndY >= minY) {
+      selectedBlocks.add(index);
+      
+      const blockElement = document.querySelector(
+        `.placed-block[data-grid-x="${block.x}"][data-grid-y="${block.y}"]`
+      );
+      if (blockElement) {
+        blockElement.classList.add('selected');
+      }
+    }
+  });
+}
+
+function copySelection() {
+  if (selectedBlocks.size === 0) {
+    alert('No blocks selected');
+    return;
+  }
+  
+  const selectedBlockData = Array.from(selectedBlocks).map(index => 
+    JSON.parse(JSON.stringify(boardState.blocks[index]))
+  );
+  
+  // Store in a simple way for now
+  window.copiedBlocks = selectedBlockData;
+  console.log('Copied blocks:', selectedBlockData);
+}
+
+function deleteSelection() {
+  if (selectedBlocks.size === 0) {
+    alert('No blocks selected');
+    return;
+  }
+  
+  // Sort indices in reverse order to avoid index shifting
+  const sortedIndices = Array.from(selectedBlocks).sort((a, b) => b - a);
+  
+  sortedIndices.forEach(index => {
+    const block = boardState.blocks[index];
+    const blockElement = document.querySelector(
+      `.placed-block[data-grid-x="${block.x}"][data-grid-y="${block.y}"]`
+    );
+    if (blockElement) {
+      blockElement.remove();
+    }
+    boardState.blocks.splice(index, 1);
+  });
+  
+  clearSelection();
+  updateTileCount();
+}
+
 // === TILE TYPE SELECTOR FUNCTIONS ===
 function initTileTypeSelector(containerId, selectedTypeVar, selectedElementVar) {
   const container = document.getElementById(containerId);
@@ -522,6 +737,11 @@ function initTileTypeSelector(containerId, selectedTypeVar, selectedElementVar) 
     { value: 'br', label: '25269' },
     { value: 'bucket', label: 'Fill' }
   ];
+  
+  // Add selection tool for canvas only
+  if (containerId === 'canvas-tile-selector') {
+    tileTypes.push({ value: 'selection', label: 'Select' });
+  }
 
   container.innerHTML = '';
   
@@ -535,6 +755,9 @@ function initTileTypeSelector(containerId, selectedTypeVar, selectedElementVar) 
     if (tileType.value === 'bucket') {
       option.classList.add('bucket-fill');
       option.textContent = '🪣';
+    } else if (tileType.value === 'selection') {
+      option.classList.add('selection');
+      option.textContent = '🔲';
     } else {
       const canvas = createElement('canvas');
       canvas.width = 30;
@@ -566,6 +789,13 @@ function initTileTypeSelector(containerId, selectedTypeVar, selectedElementVar) 
         option.classList.add('selected');
         canvasSelectedElement = option;
         canvasSelectedType = tileType.value;
+        
+        // Handle selection mode toggle
+        if (tileType.value === 'selection') {
+          if (!isSelectionMode) toggleSelectionMode();
+        } else {
+          if (isSelectionMode) toggleSelectionMode();
+        }
       }
     });
     
@@ -785,6 +1015,7 @@ function setBoardSize(width, height) {
 
 function clearBoard() {
   boardState.blocks = [];
+  clearSelection();
 }
 
 function generateBoard() {
@@ -819,12 +1050,124 @@ function renderGrid() {
       cell.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        editCanvasCell(col, row);
+        
+        if (!isSelectionMode) {
+          editCanvasCell(col, row);
+        }
       });
       
       boardContainer.appendChild(cell);
     }
   }
+  
+  // Always setup selection handlers for the board container
+  setupSelectionHandlers(boardContainer);
+}
+
+function handleSelectionClick(e, col, row) {
+  if (!isSelecting) {
+    isSelecting = true;
+    selectionStart = { x: col, y: row };
+    selectionEnd = { x: col, y: row };
+    
+    document.addEventListener('mousemove', handleSelectionDrag);
+    document.addEventListener('mouseup', handleSelectionEnd);
+  }
+}
+
+function handleSelectionDrag(e) {
+  if (!isSelecting) return;
+  
+  const boardContainer = document.getElementById('board');
+  const rect = boardContainer.getBoundingClientRect();
+  const x = Math.floor((e.clientX - rect.left) / CONFIG.cellSize);
+  const y = Math.floor((e.clientY - rect.top) / CONFIG.cellSize);
+  
+  if (x >= 0 && x < boardWidth && y >= 0 && y < boardHeight) {
+    selectionEnd = { x, y };
+    createSelectionRectangle(selectionStart.x, selectionStart.y, selectionEnd.x, selectionEnd.y);
+  }
+}
+
+function handleSelectionEnd(e) {
+  if (!isSelecting) return;
+  
+  isSelecting = false;
+  document.removeEventListener('mousemove', handleSelectionDrag);
+  document.removeEventListener('mouseup', handleSelectionEnd);
+  
+  clearSelection();
+  selectBlocksInArea(selectionStart.x, selectionStart.y, selectionEnd.x, selectionEnd.y);
+}
+
+function setupSelectionHandlers(boardContainer) {
+  // Remove any existing selection handlers
+  boardContainer.removeEventListener('mousedown', boardContainer._selectionMouseDown);
+  
+  const selectionMouseDown = (e) => {
+    if (!isSelectionMode) return;
+    
+    // Prevent interference with block dragging
+    if (e.target.classList.contains('placed-block')) return;
+    
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const rect = boardContainer.getBoundingClientRect();
+    const startX = Math.floor((e.clientX - rect.left) / CONFIG.cellSize);
+    const startY = Math.floor((e.clientY - rect.top) / CONFIG.cellSize);
+    
+    // Clear previous selection
+    clearSelection();
+    
+    isSelecting = true;
+    selectionStart = { x: startX, y: startY };
+    selectionEnd = { x: startX, y: startY };
+    
+    // Create initial selection rectangle
+    createSelectionRectangle(startX, startY, startX, startY);
+    
+    const mouseMoveHandler = (e) => {
+      if (!isSelecting) return;
+      
+      const rect = boardContainer.getBoundingClientRect();
+      const currentX = Math.floor((e.clientX - rect.left) / CONFIG.cellSize);
+      const currentY = Math.floor((e.clientY - rect.top) / CONFIG.cellSize);
+      
+      // Clamp to board boundaries
+      const clampedX = Math.max(0, Math.min(boardWidth - 1, currentX));
+      const clampedY = Math.max(0, Math.min(boardHeight - 1, currentY));
+      
+      selectionEnd = { x: clampedX, y: clampedY };
+      createSelectionRectangle(selectionStart.x, selectionStart.y, selectionEnd.x, selectionEnd.y);
+    };
+    
+    const mouseUpHandler = (e) => {
+      if (!isSelecting) return;
+      
+      isSelecting = false;
+      document.removeEventListener('mousemove', mouseMoveHandler);
+      document.removeEventListener('mouseup', mouseUpHandler);
+      
+      // Select blocks in the final rectangle
+      selectBlocksInArea(selectionStart.x, selectionStart.y, selectionEnd.x, selectionEnd.y);
+      
+      // Remove the selection rectangle after a short delay to show selection
+      setTimeout(() => {
+        if (selectionRectangle) {
+          selectionRectangle.remove();
+          selectionRectangle = null;
+        }
+      }, 200);
+    };
+    
+    document.addEventListener('mousemove', mouseMoveHandler);
+    document.addEventListener('mouseup', mouseUpHandler);
+  };
+  
+  // Store the handler reference for later removal
+  boardContainer._selectionMouseDown = selectionMouseDown;
+  boardContainer.addEventListener('mousedown', selectionMouseDown);
 }
 
 function editCanvasCell(x, y) {
@@ -833,7 +1176,6 @@ function editCanvasCell(x, y) {
   
   if (cellType === 'bucket') {
     bucketFill(x, y, color);
-    console.log('bucket fill?')
     return;
   }
   
@@ -854,6 +1196,7 @@ function bucketFill(clickX, clickY, newColor) {
   let targetBlockIndex = -1;
   let cellX = -1, cellY = -1;
   
+  // Find the block that contains the clicked position
   for (let i = 0; i < boardState.blocks.length; i++) {
     const block = boardState.blocks[i];
     if (clickX >= block.x && clickX < block.x + block.width &&
@@ -866,24 +1209,42 @@ function bucketFill(clickX, clickY, newColor) {
     }
   }
   
-  if (!targetBlock || !targetBlock.cells || !targetBlock.cells[cellY] || !targetBlock.cells[cellY][cellX]) {
+  if (!targetBlock || !targetBlock.cells || 
+      !targetBlock.cells[cellY] || !targetBlock.cells[cellY][cellX]) {
     return;
   }
   
   const originalColor = targetBlock.cells[cellY][cellX].color;
+  const originalShape = targetBlock.cells[cellY][cellX].shape;
+  
   if (originalColor === newColor) {
     return;
   }
   
-  for (let y = 0; y < targetBlock.height; y++) {
-    for (let x = 0; x < targetBlock.width; x++) {
-      if (targetBlock.cells[y] && targetBlock.cells[y][x] && 
-          targetBlock.cells[y][x].color === originalColor) {
-        targetBlock.cells[y][x].color = newColor;
-      }
+  // Flood fill algorithm
+  function floodFill(x, y, targetColor, targetShape, newColor) {
+    if (x < 0 || x >= targetBlock.width || y < 0 || y >= targetBlock.height) {
+      return;
     }
+    
+    const currentCell = targetBlock.cells[y][x];
+    if (!currentCell || currentCell.color !== targetColor || currentCell.shape !== targetShape) {
+      return;
+    }
+    
+    // Change the color
+    currentCell.color = newColor;
+    
+    // Recursively fill adjacent cells
+    floodFill(x + 1, y, targetColor, targetShape, newColor);
+    floodFill(x - 1, y, targetColor, targetShape, newColor);
+    floodFill(x, y + 1, targetColor, targetShape, newColor);
+    floodFill(x, y - 1, targetColor, targetShape, newColor);
   }
   
+  floodFill(cellX, cellY, originalColor, originalShape, newColor);
+  
+  // Update the visual representation
   const placedBlocks = document.querySelectorAll('.placed-block');
   placedBlocks.forEach(blockElement => {
     const blockX = parseInt(blockElement.dataset.gridX);
@@ -907,6 +1268,7 @@ function bucketFill(clickX, clickY, newColor) {
 function clearCanvas() {
   boardState.blocks = [];
   document.querySelectorAll('.placed-block').forEach(block => block.remove());
+  clearSelection();
   updateTileCount();
 }
 
@@ -923,7 +1285,7 @@ function addBorder() {
     id: 'borderV',
     width: 1,
     height: (boardHeight-2),
-    cells: Array.from({ length: boardHeight }, () => [{ shape: 'pixel', color: borderColor }])
+    cells: Array.from({ length: boardHeight-2 }, () => [{ shape: 'pixel', color: borderColor }])
   };
   
   placeBlock(0, 0, borderH);
@@ -931,6 +1293,41 @@ function addBorder() {
   placeBlock(0, 1, borderV);
   placeBlock((boardWidth-1), 1, borderV);
   updateTileCount();
+}
+
+// === PRINT FUNCTION ===
+function printBoard() {
+  const boardContainer = document.getElementById('board');
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  
+  // Set canvas size to match board
+  canvas.width = boardWidth * CONFIG.cellSize;
+  canvas.height = boardHeight * CONFIG.cellSize;
+  
+  // Fill with white background
+  ctx.fillStyle = 'white';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+  // Draw all blocks
+  boardState.blocks.forEach(block => {
+    const blockCanvas = renderBlockToCanvas(block);
+    ctx.drawImage(blockCanvas, block.x * CONFIG.cellSize, block.y * CONFIG.cellSize);
+  });
+  
+  // Convert to blob and open in new tab
+  canvas.toBlob(blob => {
+    const url = URL.createObjectURL(blob);
+    const newTab = window.open();
+    newTab.document.write(`
+      <html>
+        <head><title>AlphaPix Board</title></head>
+        <body style="margin:0;padding:20px;background:#f0f0f0;display:flex;justify-content:center;align-items:center;min-height:100vh;">
+          <img src="${url}" style="max-width:100%;max-height:100%;image-rendering:pixelated;border:2px solid #333;">
+        </body>
+      </html>
+    `);
+  }, 'image/png');
 }
 
 // === BLOCK DRAG AND DROP FUNCTIONS ===
@@ -958,6 +1355,10 @@ function setupBlockEventHandlers(canvas, blockData) {
 
       bucketFill(clickX, clickY, color);
       return; // Skip drag
+    }
+    
+    if (isSelectionMode) {
+      return; // Let selection mode handle it
     }
 
     if (clickTimeout) {
@@ -1178,8 +1579,8 @@ function openExistingBlockEditor() {
 }
 
 function openBlockEditor() {
-  const editorContainer = document.getElementById('block-editor');
-  editorContainer.style.display = 'block';
+  const modal = document.getElementById('editor-modal');
+  modal.style.display = 'flex';
   document.getElementById('editing-block-id').textContent = editingBlock.id;
   document.getElementById('block-id').value = editingBlock.id;
   document.getElementById('edit-block-width').value = editingBlock.width;
@@ -1188,8 +1589,8 @@ function openBlockEditor() {
 }
 
 function closeBlockEditor() {
-  const editorContainer = document.getElementById('block-editor');
-  editorContainer.style.display = 'none';
+  const modal = document.getElementById('editor-modal');
+  modal.style.display = 'none';
   editingBlock = null;
   selectedLibraryBlock = null;
 }
@@ -1340,13 +1741,28 @@ function updateTileCount() {
 // === TEXT INPUT HANDLER ===
 function setupTextInputHandler() {
   document.addEventListener('keydown', (event) => {
+    // Skip if typing in an input field or modal is open
+    if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA' || 
+        document.getElementById('editor-modal').style.display === 'flex') {
+      return;
+    }
+    
     if (event.code === 'Backspace') {
-      boardState.blocks.pop();
-      const placedBlocks = document.querySelectorAll('.placed-block');
-      if (placedBlocks.length > 0) {
-        placedBlocks[placedBlocks.length - 1].remove();
+      if (selectedBlocks.size > 0) {
+        deleteSelection();
+      } else {
+        boardState.blocks.pop();
+        const placedBlocks = document.querySelectorAll('.placed-block');
+        if (placedBlocks.length > 0) {
+          placedBlocks[placedBlocks.length - 1].remove();
+        }
+        updateTileCount();
       }
-      updateTileCount();
+    }
+    else if (event.code === 'Escape') {
+      if (isSelectionMode) {
+        toggleSelectionMode();
+      }
     }
     else {
       if (event.code === 'Space') {
@@ -1475,6 +1891,7 @@ function setupEventListeners() {
   document.getElementById('generate-board').addEventListener('click', generateBoard);
   document.getElementById('clear-main-canvas').addEventListener('click', clearCanvas);
   document.getElementById('add-border').addEventListener('click', addBorder);
+  document.getElementById('print-board').addEventListener('click', printBoard);
 
   document.getElementById('new-block').addEventListener('click', openNewBlockEditor);
   document.getElementById('edit-block').addEventListener('click', openExistingBlockEditor);
@@ -1488,6 +1905,18 @@ function setupEventListeners() {
   document.getElementById('load-board').addEventListener('click', loadBoard);
   document.getElementById('save-library').addEventListener('click', saveLibrary);
   document.getElementById('load-library').addEventListener('click', loadLibrary);
+  
+  // Selection tool event listeners
+  document.getElementById('copy-selection').addEventListener('click', copySelection);
+  document.getElementById('delete-selection').addEventListener('click', deleteSelection);
+  document.getElementById('clear-selection').addEventListener('click', clearSelection);
+  
+  // Modal click outside to close
+  document.getElementById('editor-modal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('editor-modal')) {
+      closeBlockEditor();
+    }
+  });
 }
 
 // === MAIN INITIALIZATION ===

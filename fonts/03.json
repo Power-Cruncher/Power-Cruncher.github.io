@@ -1,0 +1,443 @@
+[
+  {
+    "id": "d",
+    "width": 3,
+    "height": 3,
+    "cells": [
+      [
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ff0000"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        }
+      ],
+      [
+        {
+          "shape": "tl",
+          "color": "#ff0000"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ff0000"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        }
+      ],
+      [
+        {
+          "shape": "bl",
+          "color": "#ff0000"
+        },
+        {
+          "shape": "br",
+          "color": "#ff0000"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        }
+      ]
+    ]
+  },
+  {
+    "id": "o",
+    "width": 3,
+    "height": 3,
+    "cells": [
+      [
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        }
+      ],
+      [
+        {
+          "shape": "tl",
+          "color": "#ff0000"
+        },
+        {
+          "shape": "tr",
+          "color": "#ff0000"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        }
+      ],
+      [
+        {
+          "shape": "bl",
+          "color": "#ff0000"
+        },
+        {
+          "shape": "br",
+          "color": "#ff0000"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        }
+      ]
+    ]
+  },
+  {
+    "id": "t",
+    "width": 3,
+    "height": 3,
+    "cells": [
+      [
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ff0000"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        }
+      ],
+      [
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ff0000"
+        },
+        {
+          "shape": "br",
+          "color": "#ff0000"
+        }
+      ],
+      [
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        },
+        {
+          "shape": "bl",
+          "color": "#ff0000"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        }
+      ]
+    ]
+  },
+  {
+    "id": "y",
+    "width": 3,
+    "height": 3,
+    "cells": [
+      [
+        {
+          "shape": "tr",
+          "color": "#ff0000"
+        },
+        {
+          "shape": "tl",
+          "color": "#ff0000"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        }
+      ],
+      [
+        {
+          "shape": "bl",
+          "color": "#ff0000"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ff0000"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        }
+      ],
+      [
+        {
+          "shape": "bl",
+          "color": "#ff0000"
+        },
+        {
+          "shape": "br",
+          "color": "#ff0000"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        }
+      ]
+    ]
+  },
+  {
+    "id": "u",
+    "width": 3,
+    "height": 3,
+    "cells": [
+      [
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        }
+      ],
+      [
+        {
+          "shape": "pixel",
+          "color": "#ff0000"
+        },
+        {
+          "shape": "tl",
+          "color": "#ff0000"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        }
+      ],
+      [
+        {
+          "shape": "bl",
+          "color": "#ff0000"
+        },
+        {
+          "shape": "br",
+          "color": "#ff0000"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        }
+      ]
+    ]
+  },
+  {
+    "id": "r",
+    "width": 3,
+    "height": 3,
+    "cells": [
+      [
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        }
+      ],
+      [
+        {
+          "shape": "tr",
+          "color": "#ff0000"
+        },
+        {
+          "shape": "tl",
+          "color": "#ff0000"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        }
+      ],
+      [
+        {
+          "shape": "pixel",
+          "color": "#ff0000"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        }
+      ]
+    ]
+  },
+  {
+    "id": "w",
+    "width": 4,
+    "height": 3,
+    "cells": [
+      [
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        }
+      ],
+      [
+        {
+          "shape": "tr",
+          "color": "#ff0000"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ff0000"
+        },
+        {
+          "shape": "tl",
+          "color": "#ff0000"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        }
+      ],
+      [
+        {
+          "shape": "bl",
+          "color": "#ff0000"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ff0000"
+        },
+        {
+          "shape": "br",
+          "color": "#ff0000"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        }
+      ]
+    ]
+  },
+  {
+    "id": "l",
+    "width": 2,
+    "height": 3,
+    "cells": [
+      [
+        {
+          "shape": "pixel",
+          "color": "#ff0000"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        }
+      ],
+      [
+        {
+          "shape": "pixel",
+          "color": "#ff0000"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        }
+      ],
+      [
+        {
+          "shape": "bl",
+          "color": "#ff0000"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        }
+      ]
+    ]
+  },
+  {
+    "id": "d",
+    "width": 3,
+    "height": 3,
+    "cells": [
+      [
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ff0000"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        }
+      ],
+      [
+        {
+          "shape": "tl",
+          "color": "#ff0000"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ff0000"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        }
+      ],
+      [
+        {
+          "shape": "bl",
+          "color": "#ff0000"
+        },
+        {
+          "shape": "br",
+          "color": "#ff0000"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        }
+      ]
+    ]
+  }
+]
