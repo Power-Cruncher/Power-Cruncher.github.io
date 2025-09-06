@@ -1,6 +1,6 @@
 [
   {
-    "id": "d",
+    "id": "D",
     "width": 3,
     "height": 3,
     "cells": [
@@ -49,7 +49,7 @@
     ]
   },
   {
-    "id": "o",
+    "id": "O",
     "width": 3,
     "height": 3,
     "cells": [
@@ -98,15 +98,11 @@
     ]
   },
   {
-    "id": "t",
+    "id": "T",
     "width": 3,
     "height": 3,
     "cells": [
       [
-        {
-          "shape": "pixel",
-          "color": "#ffffff00"
-        },
         {
           "shape": "pixel",
           "color": "#ff0000"
@@ -114,13 +110,13 @@
         {
           "shape": "pixel",
           "color": "#ffffff00"
-        }
-      ],
-      [
+        },
         {
           "shape": "pixel",
           "color": "#ffffff00"
-        },
+        }
+      ],
+      [
         {
           "shape": "pixel",
           "color": "#ff0000"
@@ -128,16 +124,20 @@
         {
           "shape": "br",
           "color": "#ff0000"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
         }
       ],
       [
         {
-          "shape": "pixel",
-          "color": "#ffffff00"
-        },
-        {
           "shape": "bl",
           "color": "#ff0000"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
         },
         {
           "shape": "pixel",
@@ -147,7 +147,7 @@
     ]
   },
   {
-    "id": "y",
+    "id": "Y",
     "width": 3,
     "height": 3,
     "cells": [
@@ -196,7 +196,7 @@
     ]
   },
   {
-    "id": "u",
+    "id": "U",
     "width": 3,
     "height": 3,
     "cells": [
@@ -245,7 +245,7 @@
     ]
   },
   {
-    "id": "r",
+    "id": "R",
     "width": 3,
     "height": 3,
     "cells": [
@@ -294,7 +294,7 @@
     ]
   },
   {
-    "id": "w",
+    "id": "W",
     "width": 4,
     "height": 3,
     "cells": [
@@ -355,7 +355,7 @@
     ]
   },
   {
-    "id": "l",
+    "id": "L",
     "width": 2,
     "height": 3,
     "cells": [
@@ -382,55 +382,6 @@
       [
         {
           "shape": "bl",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ffffff00"
-        }
-      ]
-    ]
-  },
-  {
-    "id": "d",
-    "width": 3,
-    "height": 3,
-    "cells": [
-      [
-        {
-          "shape": "pixel",
-          "color": "#ffffff00"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ffffff00"
-        }
-      ],
-      [
-        {
-          "shape": "tl",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "pixel",
-          "color": "#ffffff00"
-        }
-      ],
-      [
-        {
-          "shape": "bl",
-          "color": "#ff0000"
-        },
-        {
-          "shape": "br",
           "color": "#ff0000"
         },
         {
