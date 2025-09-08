@@ -5524,5 +5524,124 @@
         }
       ]
     ]
+  },
+  {
+    "id": " ",
+    "width": 3,
+    "height": 8,
+    "cells": [
+      [
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        }
+      ],
+      [
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        }
+      ],
+      [
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        }
+      ],
+      [
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        }
+      ],
+      [
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        }
+      ],
+      [
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        }
+      ],
+      [
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        }
+      ],
+      [
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        }
+      ]
+    ]
   }
 ]
