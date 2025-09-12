@@ -1118,9 +1118,8 @@ function startBlockDrag(e, canvas, blockData) {
   canvas.classList.add('dragging');
   
   // Remove from board state temporarily
-  const blockIndex = boardState.blocks.findIndex(b => 
-    b.x === parseInt(canvas.dataset.gridX) && b.y === parseInt(canvas.dataset.gridY)
-  );
+  const blockId = canvas.dataset.blockId;
+  const blockIndex = boardState.blocks.findIndex(b => b.id === blockId);
   if (blockIndex >= 0) {
     boardState.blocks.splice(blockIndex, 1);
   }
@@ -1177,6 +1176,7 @@ function handleBlockDrop(e) {
       draggedBlockElement.dataset.gridY = gridY;
       
       boardState.blocks.push({
+        id: draggedBlockElement.dataset.blockId,  // preserve original ID
         x: gridX,
         y: gridY,
         width: draggedBlockData.width,
@@ -1188,6 +1188,7 @@ function handleBlockDrop(e) {
       draggedBlockElement.style.left = `${originalX * CONFIG.cellSize}px`;
       draggedBlockElement.style.top = `${originalY * CONFIG.cellSize}px`;
       boardState.blocks.push({
+        id: draggedBlockElement.dataset.blockId,  // preserve original ID
         x: originalX,
         y: originalY,
         width: draggedBlockData.width,
@@ -1200,6 +1201,7 @@ function handleBlockDrop(e) {
     draggedBlockElement.style.left = `${originalX * CONFIG.cellSize}px`;
     draggedBlockElement.style.top = `${originalY * CONFIG.cellSize}px`;
     boardState.blocks.push({
+      id: draggedBlockElement.dataset.blockId,  // preserve original ID
       x: originalX,
       y: originalY,
       width: draggedBlockData.width,
@@ -1219,20 +1221,20 @@ function handleBlockDrop(e) {
 }
 
 function removeBlockFromBoard(canvas) {
-  const gridX = parseInt(canvas.dataset.gridX);
-  const gridY = parseInt(canvas.dataset.gridY);
-  
-  // Remove from board state
-  const blockIndex = boardState.blocks.findIndex(b => b.x === gridX && b.y === gridY);
+  const blockId = canvas.dataset.blockId;
+
+  // Remove from board state by ID
+  const blockIndex = boardState.blocks.findIndex(b => b.id === blockId);
   if (blockIndex >= 0) {
     boardState.blocks.splice(blockIndex, 1);
   }
-  
+
   // Remove from DOM
   canvas.remove();
-  
+
   updateTileCount();
 }
+
 
 function placeBlock(x, y, blockData) {
   const boardContainer = document.getElementById('board');
