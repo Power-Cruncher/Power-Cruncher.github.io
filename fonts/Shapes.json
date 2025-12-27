@@ -1,0 +1,81 @@
+[
+  {
+    "id": ".",
+    "width": 4,
+    "height": 4,
+    "cells": [
+      [
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        },
+        {
+          "shape": "tl",
+          "color": "#ff0000"
+        },
+        {
+          "shape": "tr",
+          "color": "#ff0000"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        }
+      ],
+      [
+        {
+          "shape": "tl",
+          "color": "#ff0000"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ff0000"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ff0000"
+        },
+        {
+          "shape": "tr",
+          "color": "#ff0000"
+        }
+      ],
+      [
+        {
+          "shape": "bl",
+          "color": "#ff0000"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ff0000"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ff0000"
+        },
+        {
+          "shape": "br",
+          "color": "#ff0000"
+        }
+      ],
+      [
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        },
+        {
+          "shape": "bl",
+          "color": "#ff0000"
+        },
+        {
+          "shape": "br",
+          "color": "#ff0000"
+        },
+        {
+          "shape": "pixel",
+          "color": "#ffffff00"
+        }
+      ]
+    ]
+  }
+]
