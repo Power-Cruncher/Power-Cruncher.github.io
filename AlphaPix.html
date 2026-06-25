@@ -342,6 +342,12 @@
     
     <div class="section">
       <h3>Tile Count</h3>
+      <div class="control-row">
+        <label for="inventory-file" style="font-size:13px;">Check against inventory (XML):</label>
+        <input type="file" id="inventory-file" accept=".xml">
+        <button id="clear-inventory">Clear</button>
+      </div>
+      <div id="inventory-status" style="font-size:12px;color:#666;margin:6px 0;"></div>
       <div id="count-display"></div>
     </div>
   </div>
@@ -460,6 +466,29 @@ const COLOR_NAMES = [
   "Dark Azure", "Coral", "Lavender", "Bright Green", "Yellow"
 ];
 const blockBackground = '#ffffff00';
+
+// BrickLink color ID -> color name (matches names in COLOR_NAMES so we can
+// look up the matching hex in COLOR_PALETTE). Only covers colors that show
+// up paired with the part numbers we track below; extend as needed.
+const COLOR_DICT = {
+  1: "White",
+  153: "Dark Azure",
+  220: "Coral",
+  154: "Lavender",
+  36: "Bright Green",
+  3: "Yellow"
+};
+
+// BrickLink part number -> tile shape used on the board.
+// 3070 = 1x1 plate/tile (flat), 25269 = 1x1 round tile w/ bar (the corner
+// piece, used at any of the 4 rotations tl/tr/bl/br).
+const PART_TO_SHAPE = {
+  '3070': 'pixel',
+  '25269': 'tl'
+};
+
+let tileInventory = {};   // key: `${shape}|${hexColor}` -> quantity available
+let inventoryLoaded = false;
 
 let boardWidth = 32;
 let boardHeight = 32;
@@ -869,7 +898,9 @@ function setBoardSize(width, height) {
 
 function clearBoard() {
   boardState.blocks = [];
+  renderBoard();
   updateTileCount();
+  addBorder();
 }
 
 function generateBoard() {
@@ -893,9 +924,18 @@ function editCanvasCell(x, y) {
   
   if (cellType === 'bucket') {
     bucketFill(x, y, color);
+    renderBoard();
+    updateTileCount();
     return;
   }
   
+  // Remove any existing single-cell tile already at this exact spot so
+  // repainting a cell replaces it instead of silently stacking a hidden
+  // duplicate (which inflated the tile count and confused drag/delete).
+  boardState.blocks = boardState.blocks.filter(b =>
+    !(b.x === x && b.y === y && b.width === 1 && b.height === 1)
+  );
+
   const canvasBlockId = `canvas_${x}_${y}_${Date.now()}`;
   const canvasBlock = {
     id: canvasBlockId,
@@ -1179,6 +1219,12 @@ function saveBlock() {
     alert('Please enter a block ID');
     return;
   }
+
+  const duplicateIndex = libraryBlocks.findIndex((b, i) => b.id === newId && i !== selectedLibraryBlock);
+  if (duplicateIndex !== -1) {
+    alert(`A block with ID "${newId}" already exists. Please choose a different ID.`);
+    return;
+  }
   
   editingBlock.id = newId;
   
@@ -1217,7 +1263,11 @@ function updateTileCount() {
   counts.forEach(({ shape, color, count }) => {
     const item = createElement('div', 'count-item');
     
-    const colorIdx = COLOR_PALETTE.indexOf(color);
+    // Case-insensitive match: <input type="color"> always normalizes to
+    // lowercase, but a few COLOR_PALETTE entries (e.g. '#CCCCCC') are
+    // uppercase, so a plain indexOf() here was silently failing to find
+    // their names.
+    const colorIdx = COLOR_PALETTE.findIndex(c => c.toLowerCase() === color.toLowerCase());
     const colorName = colorIdx !== -1 
       ? COLOR_NAMES[colorIdx] 
       : null;
@@ -1235,12 +1285,107 @@ function updateTileCount() {
     colorDiv.appendChild(canvas);
     
     const text = createElement('span');
-    text.textContent = `${count} (${colorName || color})`;
+    let label = `${count} (${colorName || color})`;
+
+    if (inventoryLoaded) {
+      const key = `${shape}|${color.toLowerCase()}`;
+      const available = tileInventory[key] || 0;
+      if (available === 0) {
+        label += ` — ⚠️ none in inventory`;
+        item.style.color = '#c0392b';
+      } else if (count > available) {
+        label += ` — ⚠️ only ${available} available`;
+        item.style.color = '#c0392b';
+      } else {
+        label += ` — ${available} available`;
+        item.style.color = '#2d7a3a';
+      }
+    }
+
+    text.textContent = label;
     
     item.appendChild(colorDiv);
     item.appendChild(text);
     display.appendChild(item);
   });
+}
+
+// === INVENTORY (XML) FUNCTIONS ===
+function parseInventoryXML(xmlText) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(xmlText, 'text/xml');
+  if (doc.querySelector('parsererror')) {
+    throw new Error('Could not parse this file as XML.');
+  }
+
+  const items = doc.querySelectorAll('ITEM');
+  if (items.length === 0) {
+    throw new Error('No <ITEM> entries found in this file.');
+  }
+
+  const inventory = {};
+  let matchedCount = 0;
+
+  items.forEach(item => {
+    const itemId = item.querySelector('ITEMID')?.textContent.trim();
+    const colorIdText = item.querySelector('COLOR')?.textContent.trim();
+    const qtyText = item.querySelector('MINQTY')?.textContent.trim();
+
+    // Only track part numbers that correspond to a shape we actually draw
+    // on the board (3070 = flat tile, 25269 = the round/corner tile).
+    const shape = PART_TO_SHAPE[itemId];
+    if (!shape) return;
+
+    const colorId = parseInt(colorIdText, 10);
+    const colorName = COLOR_DICT[colorId];
+    if (!colorName) return; // unrecognized color for this part, skip
+
+    const colorIdx = COLOR_NAMES.indexOf(colorName);
+    if (colorIdx === -1) return;
+    const hex = COLOR_PALETTE[colorIdx].toLowerCase();
+
+    const qty = parseInt(qtyText, 10) || 0;
+    const key = `${shape}|${hex}`;
+    inventory[key] = (inventory[key] || 0) + qty;
+    matchedCount++;
+  });
+
+  return { inventory, matchedCount, totalItems: items.length };
+}
+
+function handleInventoryFile(e) {
+  const file = e.target.files[0];
+  const statusEl = document.getElementById('inventory-status');
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (evt) => {
+    try {
+      const { inventory, matchedCount, totalItems } = parseInventoryXML(evt.target.result);
+      tileInventory = inventory;
+      inventoryLoaded = true;
+      statusEl.textContent = `Loaded ${file.name}: ${matchedCount} of ${totalItems} inventory lines matched tile types we track (1x1 tile / round tile).`;
+      statusEl.style.color = '#2d7a3a';
+      updateTileCount();
+    } catch (err) {
+      statusEl.textContent = `Error: ${err.message}`;
+      statusEl.style.color = '#c0392b';
+    }
+  };
+  reader.onerror = () => {
+    statusEl.textContent = 'Could not read that file.';
+    statusEl.style.color = '#c0392b';
+  };
+  reader.readAsText(file);
+}
+
+function clearInventory() {
+  tileInventory = {};
+  inventoryLoaded = false;
+  const statusEl = document.getElementById('inventory-status');
+  statusEl.textContent = '';
+  document.getElementById('inventory-file').value = '';
+  updateTileCount();
 }
 
 function renderBoard() {
@@ -1362,7 +1507,12 @@ function loadBoard() {
     document.getElementById('board-width').value = data.width / 16;
     document.getElementById('board-height').value = data.height / 16;
     
-    generateBoard();
+    // Don't call generateBoard() here — it calls addBorder() internally,
+    // and the saved blocks below already include the border, so that
+    // would duplicate it. Just set the size and clear blocks directly.
+    setBoardSize(data.width, data.height);
+    boardState.blocks = [];
+    renderBoard();
     
     if (data.blocks) {
       data.blocks.forEach(block => {
@@ -1478,6 +1628,7 @@ function setupBoardEvents() {
       const color = document.getElementById('canvas-cell-color').value;
       bucketFill(gridX, gridY, color);
       renderBoard();
+      updateTileCount();
       return;
     }
 
@@ -1618,6 +1769,9 @@ function setupEventListeners() {
   document.getElementById('clear-main-canvas').addEventListener('click', clearBoard);
   document.getElementById('print-board').addEventListener('click', printBoard);
   document.getElementById('center-text').addEventListener('click', centerRowBlocks);
+
+  document.getElementById('inventory-file').addEventListener('change', handleInventoryFile);
+  document.getElementById('clear-inventory').addEventListener('click', clearInventory);
 
   document.getElementById('new-block').addEventListener('click', openNewBlockEditor);
   document.getElementById('edit-block').addEventListener('click', openExistingBlockEditor);
