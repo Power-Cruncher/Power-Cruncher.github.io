@@ -1,13 +1,11 @@
 ```markdown
----
-
 ## ⚡ PowerCruncher
 
-:contentReference[oaicite:0]{index=0} is a work-in-progress web tool for comparing electricity retailers in New Zealand.
+PowerCruncher is a work-in-progress web tool for comparing electricity retailers in New Zealand.
 
 It processes real electricity usage data exported from your power company, calculates estimated monthly costs, and visualises usage patterns with separate graphs for weekdays and weekends.
 
-🔗 Project page: :contentReference[oaicite:1]{index=1}
+🔗 Project page: https://power-cruncher.github.io/Power-Cruncher.html
 
 ### What it does
 
@@ -34,9 +32,9 @@ It:
 
 ## 🧱 AlphaPix (LEGO Dots Designer)
 
-:contentReference[oaicite:2]{index=2} is a lightweight HTML/JavaScript tool that lets you design custom LEGO Dots-style boards directly in your browser.
+AlphaPix is a lightweight HTML/JavaScript tool that lets you design custom LEGO Dots-style boards directly in your browser.
 
-🔗 Project page: :contentReference[oaicite:3]{index=3}
+🔗 Project page: https://power-cruncher.github.io/AlphaPix.html
 
 ### What it does
 
@@ -48,17 +46,7 @@ AlphaPix is designed for quick, keyboard-friendly creation of LEGO Dots patterns
 - Auto-centring for clean layout alignment
 - Save and load designs using JSON files
 - Inventory checking:
-  - Compare your design against available LEGO sets
-  - Uses set inventories (XML format from Rebrickable)
+  - Compare your design against available parts in your LEGO sets
+  - Uses set inventories (BrickLink XML format from Rebrickable)
 - Custom font creation and saving (JSON format)
-
-### Notes on LEGO inventory data
-
-- Set inventories can be exported from Rebrickable
-- Example source:
-  - https://rebrickable.com/sets/41952-1/big-message-board/?inventory=1#parts
-- Recommended export method:
-  - Inventory → Export Parts → BrickLink XML format
-
----
 ```
