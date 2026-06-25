@@ -1,7 +1,6 @@
-```markdown
 ## ⚡ PowerCruncher
 
-[PowerCruncher](https://power-cruncher.github.io/Power-Cruncher.html) is a work-in-progress web tool for comparing electricity retailers in New Zealand.
+[PowerCruncher](https://www.power-cruncher.github.io/Power-Cruncher.html) is a work-in-progress web tool for comparing electricity retailers in New Zealand.
 
 It processes real electricity usage data exported from your power company, calculates estimated monthly costs, and visualises usage patterns with separate graphs for weekdays and weekends.
 
@@ -45,4 +44,3 @@ AlphaPix is designed for quick, keyboard-friendly creation of LEGO Dots patterns
   - Compare your design against available parts in your LEGO sets
   - Uses set inventories (BrickLink XML format from Rebrickable)
 - Custom font creation and saving (JSON format)
-```
